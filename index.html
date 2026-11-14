@@ -4,7 +4,123 @@
 .dock-team small{font-size:10px;line-height:1.3;font-weight:500;color:var(--sub);overflow-wrap:anywhere;max-width:100%}
 .score-steps{font-size:12px;line-height:1.45;color:var(--sub);margin:3px auto 7px;max-width:100%;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 @media(max-width:520px){.dock-score{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px}.dock-score strong{font-size:clamp(24px,5.5vw,36px)}.score-steps{font-size:11px}}
-</style></head><body><main><div class="score-dock"><header class="club-header"><img id="clubLogo" class="club-logo" alt="FCN-Wappen" style="display:none"><div class="header-title"><strong>Hannes Hütte</strong><span>Bierkopf-App</span></div></header><div class="dock-score"><div class="dock-team"><span id="dockName0"></span><small id="dockSteps0"></small></div><strong id="dockPoints">0 : 0</strong><div class="dock-team"><span id="dockName1"></span><small id="dockSteps1"></small></div></div></div><div class="muted">Bierkopf · 21 Punkte pro Partie · unbegrenzt weiterspielen</div><div class="tabs"><button id="tabPlay" class="active" onclick="tab('play')">Spiel</button><button id="tabPeople" onclick="tab('people')">Spieler & Teams</button><button id="tabRanks" onclick="tab('ranks')">Ranglisten</button><button id="tabHistory" onclick="tab('history')">Historie</button><button id="tabSettings" onclick="tab('settings')">Einstellungen</button></div><section id="play"><div class="panel"><div class="section"><span class="small muted" id="sessionLabel"></span><span class="pill" id="gameLabel"></span></div><div class="score"><div class="team"><strong id="name0"></strong><div class="number" id="score0">0</div><div class="score-steps" id="steps0" aria-label="Punkteverlauf Team 1">Noch keine Punkte</div><div class="small muted" id="members0"></div><div id="avatars0" class="avatarline"></div></div><div class="colon">:</div><div class="team"><strong id="name1"></strong><div class="number red" id="score1">0</div><div class="score-steps" id="steps1" aria-label="Punkteverlauf Team 2">Noch keine Punkte</div><div class="small muted" id="members1"></div><div id="avatars1" class="avatarline"></div></div></div><div class="section" style="margin-top:20px"><span class="muted small">Gewonnene Partien</span><strong id="wins">0 : 0</strong></div><div id="finishNotice" class="notice hide"><strong>21 Punkte erreicht.</strong><p class="small">Möchtest du diese Partie abschließen? Erst deine Bestätigung archiviert das Ergebnis.</p><div class="row"><button class="primary" onclick="finishGame()">Partie abschließen</button><button class="ghost" onclick="dismissFinish()">Weiterspielen</button></div></div><div id="nextNotice" class="notice hide"><strong>Partie abgeschlossen.</strong><p class="small">Die Teams bleiben für die nächste Partie bestehen.</p><button class="primary" onclick="nextGame()">Nächste Partie · 0 : 0</button></div></div><div class="panel" id="scoring"><h2>Ergebnis erfassen</h2><label>Wer gewinnt die Runde?</label><div class="grid"><button id="winner0" onclick="pickWinner(0)"></button><button id="winner1" onclick="pickWinner(1)"></button></div><label>Spielergebnis</label><div class="choices" id="bases"></div><label>Ansage</label><div class="choices mult" id="mults"></div><div class="section" style="margin-top:20px"><span class="muted">Punkte dieser Runde</span><strong style="font-size:25px" id="preview">+1</strong></div><button class="primary" style="width:100%;margin-top:12px" onclick="addRound()">Runde eintragen</button><button class="ghost" style="width:100%;margin-top:8px" onclick="undo()">Letzte Runde zurücknehmen</button></div><div class="panel"><div class="section"><h2>Aktuelle Runden</h2><span class="small muted" id="roundCount"></span></div><div id="rounds" class="history"></div></div></section><section id="people" class="hide"><div class="panel"><h2>Teams konfigurieren</h2><div class="grid"><div><label>Team 1</label><input id="team0" placeholder="Ich"></div><div><label>Team 2</label><input id="team1" placeholder="Du"></div></div><p class="small muted">Wähle aus allen gespeicherten Personen. Jede ausgewählte Person erhält die vollen Teampunkte in ihrer Statistik.</p><div class="grid"><div><label>Personen Team 1</label><div id="select0" class="stack"></div></div><div><label>Personen Team 2</label><div id="select1" class="stack"></div></div></div><button class="primary" style="margin-top:15px;width:100%" onclick="saveTeams()">Teams speichern</button></div><div class="panel"><h2>Spielerverzeichnis</h2><div class="row"><input id="newPerson" placeholder="Neuen Spieler hinzufügen"><button onclick="addPerson()">Hinzufügen</button></div><p class="small muted">Foto aufnehmen oder aus der Fotomediathek wählen. Bilder werden verkleinert und lokal mit deinem Backup gespeichert.</p><div id="peopleList" class="history" style="margin-top:14px"></div></div><div class="panel"><h2>Neuer Spielabend</h2><p class="small muted">Übernimmt Teamnamen und Spieler. Der bisherige Abend bleibt in der Historie.</p><button class="ghost" onclick="newSession()">Neuen Spielabend beginnen</button></div></section><section id="ranks" class="hide">
+</style>
+<style id="responsive-mobile-v2">
+/* iPhone, Android, iPad mini, desktop: flexible and touch-friendly. */
+html { -webkit-text-size-adjust: 100%; }
+body { min-width: 0; overflow-x: hidden; }
+main {
+  width: min(100%, 950px);
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  padding-bottom: max(75px, env(safe-area-inset-bottom));
+}
+.panel, .entry, .team, .dock-team { min-width: 0; }
+.panel { overflow-wrap: anywhere; }
+button, input, select, .pill { touch-action: manipulation; }
+button, input, select { min-height: 44px; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #ef5360; outline-offset: 2px;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 3px 1px 8px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 44px;
+  padding: 11px 14px;
+}
+.score-dock {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin-bottom: 10px;
+}
+.dock-score { min-width: 0; }
+.dock-team small {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.entry { align-items: center; }
+.entry > span { min-width: 0; overflow-wrap: anywhere; }
+.avatar { width: 58px; height: 58px; }
+.avatar.sm { width: 42px; height: 42px; }
+@media (max-width: 600px) {
+  main {
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+  .score-dock {
+    border-radius: 15px;
+    padding: 7px 9px 9px;
+  }
+  .club-header { gap: 9px; padding: 0 0 5px; }
+  .club-logo { width: 38px; height: 38px; }
+  .header-title { font-size: 15px; }
+  .dock-score {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 6px;
+  }
+  .dock-score strong { font-size: clamp(25px, 7vw, 38px); }
+  .dock-team span { font-size: 12px; line-height: 1.25; }
+  .dock-team small {
+    font-size: 10px;
+    line-height: 1.35;
+    max-height: 2.7em;
+    overflow: hidden;
+  }
+  .tabs { margin-top: 9px; }
+  .tabs button { font-size: 12px; }
+  .panel { margin-top: 12px; padding: 14px; border-radius: 17px; }
+  .score { gap: 7px; }
+  .number { font-size: clamp(40px, 11vw, 66px); letter-spacing: -2px; }
+  .team strong { font-size: clamp(13px, 3.7vw, 18px); }
+  .colon { font-size: 24px; }
+  .avatarline { gap: 5px; }
+  .avatar { width: 52px; height: 52px; }
+  .avatar.sm { width: 36px; height: 36px; }
+  .score-steps { font-size: 10px; }
+  .choices { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .choices.mult { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .choices button { min-width: 0; padding: 11px 5px; font-size: 12px; }
+  .grid { gap: 8px; }
+  .grid > * { min-width: 0; }
+  .row > * { min-width: 0; }
+  .personcard { flex-wrap: wrap; }
+  .entry { padding: 11px; gap: 8px; }
+  h2 { font-size: 18px; }
+}
+@media (max-width: 360px) {
+  .panel { padding: 11px; }
+  .dock-score strong { font-size: 24px; }
+  .choices button { font-size: 11px; }
+  .score .number { font-size: 40px; }
+  .team .avatar { width: 42px; height: 42px; }
+  .score-steps { font-size: 9px; }
+}
+@media (min-width: 601px) and (max-width: 1024px) {
+  main { max-width: 860px; padding-top: 18px; }
+  .panel { padding: 20px; }
+  .score-dock { padding: 10px 16px; }
+  .club-logo { width: 52px; height: 52px; }
+  .dock-team small { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+</style>
+</head><body><main><div class="score-dock"><header class="club-header"><img id="clubLogo" class="club-logo" alt="FCN-Wappen" style="display:none"><div class="header-title"><strong>Hannes Hütte</strong><span>Bierkopf-App</span></div></header><div class="dock-score"><div class="dock-team"><span id="dockName0"></span><small id="dockSteps0"></small></div><strong id="dockPoints">0 : 0</strong><div class="dock-team"><span id="dockName1"></span><small id="dockSteps1"></small></div></div></div><div class="muted">Bierkopf · 21 Punkte pro Partie · unbegrenzt weiterspielen</div><div class="tabs"><button id="tabPlay" class="active" onclick="tab('play')">Spiel</button><button id="tabPeople" onclick="tab('people')">Spieler & Teams</button><button id="tabRanks" onclick="tab('ranks')">Ranglisten</button><button id="tabHistory" onclick="tab('history')">Historie</button><button id="tabSettings" onclick="tab('settings')">Einstellungen</button></div><section id="play"><div class="panel"><div class="section"><span class="small muted" id="sessionLabel"></span><span class="pill" id="gameLabel"></span></div><div class="score"><div class="team"><strong id="name0"></strong><div class="number" id="score0">0</div><div class="score-steps" id="steps0" aria-label="Punkteverlauf Team 1">Noch keine Punkte</div><div class="small muted" id="members0"></div><div id="avatars0" class="avatarline"></div></div><div class="colon">:</div><div class="team"><strong id="name1"></strong><div class="number red" id="score1">0</div><div class="score-steps" id="steps1" aria-label="Punkteverlauf Team 2">Noch keine Punkte</div><div class="small muted" id="members1"></div><div id="avatars1" class="avatarline"></div></div></div><div class="section" style="margin-top:20px"><span class="muted small">Gewonnene Partien</span><strong id="wins">0 : 0</strong></div><div id="finishNotice" class="notice hide"><strong>21 Punkte erreicht.</strong><p class="small">Möchtest du diese Partie abschließen? Erst deine Bestätigung archiviert das Ergebnis.</p><div class="row"><button class="primary" onclick="finishGame()">Partie abschließen</button><button class="ghost" onclick="dismissFinish()">Weiterspielen</button></div></div><div id="nextNotice" class="notice hide"><strong>Partie abgeschlossen.</strong><p class="small">Die Teams bleiben für die nächste Partie bestehen.</p><button class="primary" onclick="nextGame()">Nächste Partie · 0 : 0</button></div></div><div class="panel" id="scoring"><h2>Ergebnis erfassen</h2><label>Wer gewinnt die Runde?</label><div class="grid"><button id="winner0" onclick="pickWinner(0)"></button><button id="winner1" onclick="pickWinner(1)"></button></div><label>Spielergebnis</label><div class="choices" id="bases"></div><label>Ansage</label><div class="choices mult" id="mults"></div><div class="section" style="margin-top:20px"><span class="muted">Punkte dieser Runde</span><strong style="font-size:25px" id="preview">+1</strong></div><button class="primary" style="width:100%;margin-top:12px" onclick="addRound()">Runde eintragen</button><button class="ghost" style="width:100%;margin-top:8px" onclick="undo()">Letzte Runde zurücknehmen</button></div><div class="panel"><div class="section"><h2>Aktuelle Runden</h2><span class="small muted" id="roundCount"></span></div><div id="rounds" class="history"></div></div></section><section id="people" class="hide"><div class="panel"><h2>Teams konfigurieren</h2><div class="grid"><div><label>Team 1</label><input id="team0" placeholder="Ich"></div><div><label>Team 2</label><input id="team1" placeholder="Du"></div></div><p class="small muted">Wähle aus allen gespeicherten Personen. Jede ausgewählte Person erhält die vollen Teampunkte in ihrer Statistik.</p><div class="grid"><div><label>Personen Team 1</label><div id="select0" class="stack"></div></div><div><label>Personen Team 2</label><div id="select1" class="stack"></div></div></div><button class="primary" style="margin-top:15px;width:100%" onclick="saveTeams()">Teams speichern</button></div><div class="panel"><h2>Spielerverzeichnis</h2><div class="row"><input id="newPerson" placeholder="Neuen Spieler hinzufügen"><button onclick="addPerson()">Hinzufügen</button></div><p class="small muted">Foto aufnehmen oder aus der Fotomediathek wählen. Bilder werden verkleinert und lokal mit deinem Backup gespeichert.</p><div id="peopleList" class="history" style="margin-top:14px"></div></div><div class="panel"><h2>Neuer Spielabend</h2><p class="small muted">Übernimmt Teamnamen und Spieler. Der bisherige Abend bleibt in der Historie.</p><button class="ghost" onclick="newSession()">Neuen Spielabend beginnen</button></div></section><section id="ranks" class="hide">
 <div class="panel"><div class="section"><h2>Beste Spieler</h2><select id="sortPlayers" aria-label="Spielerrangliste sortieren" onchange="render()" style="width:auto"><option value="wins">Nach Siegen</option><option value="points">Nach Punkten</option><option value="rate">Nach Siegquote</option></select></div><div class="small muted" style="margin-bottom:14px">Alle abgeschlossenen Bierkopf-Partien · jeder Spieler erhält die vollen Teampunkte</div><div id="playerRanking" class="history"></div><p class="small muted">Bester Mitspieler: häufigstes erfolgreiches Duo (bei Gleichstand höhere Siegquote).</p></div>
 <div class="panel"><div class="section"><h2>Beste Teams</h2><select id="sortPairs" aria-label="Teamrangliste sortieren" onchange="render()" style="width:auto"><option value="wins">Nach Siegen</option><option value="points">Nach Punkten</option><option value="rate">Nach Siegquote</option></select></div><div class="small muted" style="margin-bottom:14px">Zweier-Teams aus tatsächlich gemeinsam abgeschlossenen Partien, unabhängig von Teamnamen oder Reihenfolge</div><div id="pairRanking" class="history"></div></div></section><section id="history" class="hide"><div class="panel"><h2>Persönliche Gesamtstatistik</h2><div id="stats" class="history"></div></div><div class="panel"><h2>Alle Spielabende</h2><div id="sessions" class="history"></div></div><div class="panel"><h2>Datensicherung</h2><p class="small muted">Daten werden lokal im Browser gespeichert. Für dauerhafte Sicherheit regelmäßig exportieren.</p><div class="row"><button onclick="exportData()">Backup exportieren</button><label style="margin:0"><input type="file" accept="application/json" onchange="importData(event)" style="max-width:100%"></label></div></div></section><section id="settings" class="hide"><div class="panel"><h2>Einstellungen</h2><label>Darstellung</label><select id="themeChoice" onchange="setTheme(this.value)"><option value="dark">Dark Mode · Schwarz-Rot</option><option value="light">Light Mode · Weiß-Rot</option></select><h2 style="margin-top:22px">FCN-Logo</h2><p class="small muted">Logo nur lokal speichern und kompakt neben dem Titel anzeigen.</p><label>FCN-Logo hochladen<input type="file" accept="image/png,image/jpeg,image/webp" onchange="embedClubLogo(this)"></label><button class="ghost" onclick="removeClubLogo()">Logo entfernen</button></div></section><div class="footer">Inspiriert von der reduzierten Ästhetik in Rot und Schwarz – ohne offizielle Vereinslogos. Offline nutzbar, sofern die Datei lokal geöffnet werden kann. Browserdaten können gelöscht werden; exportiere deshalb Backups.</div></main><script>
 function refreshLogo(){const x=localStorage.getItem('hannes_fcn_logo'),el=document.getElementById('clubLogo');el.style.display=x?'block':'none';if(x)el.src=x;else el.removeAttribute('src')}
