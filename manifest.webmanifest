@@ -1,1 +1,17 @@
-{"name":"Hannes Hütte Karten-App","short_name":"Hannes Hütte","start_url":"./index.html","display":"standalone","background_color":"#101013","theme_color":"#c72c3b","lang":"de"}
+{
+  "name": "Kartabend-App",
+  "short_name": "Kartabend",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101013",
+  "theme_color": "#c72c3b",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "kartabend-logo.jpg",
+      "sizes": "1254x1254",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

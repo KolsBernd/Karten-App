@@ -1,5 +1,5 @@
-const CACHE='hannes-huette-shell-v5';
-const SHELL=['./index.html','./config.js','./manifest.webmanifest'];
+const CACHE='hannes-huette-shell-v5-1';
+const SHELL=['./index.html','./config.js','./manifest.webmanifest','./kartabend-logo.jpg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hannes-huette-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
