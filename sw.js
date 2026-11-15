@@ -1,1 +1,17 @@
-const CACHE='hannes-huette-shell-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./index.html','./config.js','./online.js','./manifest.webmanifest']))));self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(u.origin!==location.origin||e.request.method!=='GET')return;if(u.pathname.endsWith('/index.html')||u.pathname.endsWith('/online.js')||u.pathname.endsWith('/config.js')){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));return}e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});
+const CACHE='hannes-huette-shell-v4';
+const SHELL=['./index.html','./config.js','./manifest.webmanifest'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hannes-huette-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',event=>{
+ const url=new URL(event.request.url);
+ if(url.origin!==self.location.origin||event.request.method!=='GET')return;
+ const isNavigation=event.request.mode==='navigate';
+ const shell=SHELL.map(path=>new URL(path,self.registration.scope).pathname).includes(url.pathname);
+ if(!isNavigation&&!shell)return;
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  const key=isNavigation?new URL('./index.html',self.registration.scope).href:url.href;
+  try{const response=await fetch(event.request);if(response.ok&&!url.search)await cache.put(key,response.clone());return response}
+  catch(error){const cached=await cache.match(key);if(cached)return cached;throw error}
+ })());
+});
