@@ -1,5 +1,5 @@
 importScripts('app-badge.js');
-const CACHE='hannes-huette-shell-v20';
+const CACHE='hannes-huette-shell-v21';
 const SHELL=['./chat-gestures.js','./tournament-play.js','./chat-crypto.js','./evenings.js','./evenings.css','./tournament.js','./tournament.css','./app-badge.js','./index.html','./config.js','./manifest.webmanifest','./kartabend-logo.svg','./favicon.png','./datenschutz.html','./datenschutz.pdf','./impressum.html','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./supabase-2.50.0.min.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('hannes-huette-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
