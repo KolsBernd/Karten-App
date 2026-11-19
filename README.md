@@ -1,9 +1,9 @@
-# Kartabend 29
+# Kartabend 30
 
 Live-App: https://kolsbernd.github.io/Karten-App/
 
-Neue Anfrage-Benachrichtigungen, zentrierte Tabellenlogos und exklusive Rücksetzverwaltung für das bestehende Konto Kolsbernd. Die Einrichtung setzt keine Daten zurück.
+QR für Zuschauer und Beitritt normaler Räume, unabhängige Anfrage-Push-Auswahl, bereinigte Dokumentfenster/Einstellungen, größere Spielerlogos und Absage mit Sicherheitsdialog.
 
-Datenbank: `30-verwaltung-und-anfragenhinweise.sql` baut auf Version 28 auf. Installierte Funktionen wurden in einer getrennten Testdatenbank geprüft; ein produktiver Reset ist nicht Teil der Veröffentlichung.
+Datenbankmigration: `31-raum-qr-und-pushauswahl.sql` baut auf Version 29 auf. Ihre Installation veröffentlicht noch keinen Raum; erst der Ersteller kann den Zuschauer-Code erstellen und weitergeben. Beenden sperrt den Code, Wiederöffnen verlangt einen neuen Code.
 
-Nutzerhandbuch unter Einstellungen sowie als `nutzerhandbuch.html` / `nutzerhandbuch.pdf`. Nach Veröffentlichung vollständig neu laden. Prüfprotokoll: `Pruefung-Version29.md`.
+Handbuch unter Einstellungen oder als `nutzerhandbuch.html` / `nutzerhandbuch.pdf`. Prüfprotokoll: `Pruefung-Version30.md`. Rechtliche Prüfpunkte: `Rechtliche-Hinweise-Version30.md`. Nach Veröffentlichung vollständig neu laden.
