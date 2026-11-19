@@ -1,0 +1,7 @@
+/* Center player portraits within score-table columns, including image buttons. */
+.sn-table thead th:not(:first-child),.kl-table thead th:not(:first-child){text-align:center;vertical-align:middle}
+.sn-table thead th .avatar-action,.kl-table thead th .avatar-action{display:flex!important;align-items:center;justify-content:center;margin-inline:auto!important;width:max-content;max-width:100%}
+.sn-table thead th .avatar,.kl-table thead th .avatar{margin-inline:auto}
+.sn-table thead th .sn-name{display:block;text-align:center}
+#hhAdminResetPanel button{white-space:normal;line-height:1.4;padding:14px;width:100%;min-height:50px}
+#hhAdminResetPanel .hh-reset-danger{color:var(--accent)!important;border-color:var(--accent)!important}

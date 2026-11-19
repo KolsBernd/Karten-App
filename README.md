@@ -1,9 +1,9 @@
-# Kartabend 28
+# Kartabend 29
 
 Live-App: https://kolsbernd.github.io/Karten-App/
 
-Das öffentliche Paket enthält die direkt auf GitHub Pages verwendbaren App-Dateien und das Nutzerhandbuch einschließlich Screenshots und PDF. Für die bestehende Installation ist zusätzlich die Datenbankmigration `29-anfragenarchiv.sql` erforderlich; sie wird einmal im vorhandenen Supabase-Projekt ausgeführt. Die Migration erhält Spielstände und die wählbare Sichtbarkeitsbeschränkung.
+Neue Anfrage-Benachrichtigungen, zentrierte Tabellenlogos und exklusive Rücksetzverwaltung für das bestehende Konto Kolsbernd. Die Einrichtung setzt keine Daten zurück.
 
-Nutzerhandbuch: `nutzerhandbuch.html` oder `nutzerhandbuch.pdf`; in der App unter Einstellungen. Nach der Aktualisierung vollständig neu laden.
+Datenbank: `30-verwaltung-und-anfragenhinweise.sql` baut auf Version 28 auf. Installierte Funktionen wurden in einer getrennten Testdatenbank geprüft; ein produktiver Reset ist nicht Teil der Veröffentlichung.
 
-Prüfergebnisse und Einschränkungen: `Pruefung-Version28.md`, `Sicherheitspruefung-Version28.md`.
+Nutzerhandbuch unter Einstellungen sowie als `nutzerhandbuch.html` / `nutzerhandbuch.pdf`. Nach Veröffentlichung vollständig neu laden. Prüfprotokoll: `Pruefung-Version29.md`.
