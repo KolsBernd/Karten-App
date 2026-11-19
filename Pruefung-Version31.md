@@ -10,6 +10,8 @@
 ## Prüfungen
 Alle bisherigen Datenbanktests plus neue Fälle erfolgreich: Default-Denial, eigene Zustimmung/Ablehnung, fremde/unauthentifizierte Änderungen abgewiesen, private Nachweistabelle geschützt, Bilder nur mit Freigabe, Einzel-/Globalwiderruf, keine fremden Widerrufe, alte Team-/Schreibernamen maskiert, erneute Auswahl nach Wiederöffnung und Bereinigung bei Tischlöschung. Datenbankmigration zweimal ausführbar. Tests in isolierter Datenbank, keine echten Zustimmungen im Namen anderer Nutzer erteilt.
 
+Eine nicht gespeicherte Auswahl löst ein sichtbares Fehler-Pop-up aus, das ausdrücklich keine erfolgreiche Speicherung oder keinen Widerruf bestätigt. Auch dieser Fehlerfall wurde geprüft.
+
 DOM-Tests zu Popup, Nein-Fokus, Datenschutzzugang und Eintritt trotz Ablehnung erfolgreich; vorhandene Spiel-/Team-/Rücksetztests weiterhin erfolgreich. Syntax, Offline-Cache und verschlüsselte Push-Erzeugung erfolgreich. Lokale Handyansicht geprüft. Handbuch und Datenschutz aktualisiert, PDFs gerendert und kontrolliert. Produktive Installation und Rechteprüfung erfolgreich; bei Nachkontrolle keine durch die Installation erfasste Entscheidung, private Tabellen, drei Lifecycle-Trigger und sichere Voreinstellung bestätigt.
 
 ## Grenzen
