@@ -1,9 +1,9 @@
-# Kartabend 30
+# Kartabend 31
 
-Live-App: https://kolsbernd.github.io/Karten-App/
+https://kolsbernd.github.io/Karten-App/
 
-QR für Zuschauer und Beitritt normaler Räume, unabhängige Anfrage-Push-Auswahl, bereinigte Dokumentfenster/Einstellungen, größere Spielerlogos und Absage mit Sicherheitsdialog.
+Freiwillige, raum-/tischbezogene Ja-/Nein-Auswahl zur zusätzlichen Namens-/Bildanzeige für externe Zuschauer. Standard ohne Zustimmung: Anonym ohne Bild. Teilnahme bleibt auch bei Nein möglich. Einzelauswahl im Raum bzw. Tischstatistik und globaler Widerruf unter Einstellungen.
 
-Datenbankmigration: `31-raum-qr-und-pushauswahl.sql` baut auf Version 29 auf. Ihre Installation veröffentlicht noch keinen Raum; erst der Ersteller kann den Zuschauer-Code erstellen und weitergeben. Beenden sperrt den Code, Wiederöffnen verlangt einen neuen Code.
+Servermigration `32-zuschauer-einwilligung.sql` baut auf Version 30 auf. Keine frühere globale Betreiberfreigabe wird als persönliche Zustimmung übernommen. Installation erfasst selbst keine Einwilligung.
 
-Handbuch unter Einstellungen oder als `nutzerhandbuch.html` / `nutzerhandbuch.pdf`. Prüfprotokoll: `Pruefung-Version30.md`. Rechtliche Prüfpunkte: `Rechtliche-Hinweise-Version30.md`. Nach Veröffentlichung vollständig neu laden.
+Nutzerhandbuch und Datenschutzerklärung aktualisiert. `Pruefung-Version31.md` und `Rechtliche-Hinweise-Version31.md` nennen Nachweise und Grenzen. Nach Veröffentlichung neu laden.

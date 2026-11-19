@@ -9,3 +9,5 @@ Bei jeder neuen Version das Nutzerhandbuch aktualisieren, wie vom Nutzer beauftr
 - Nicht behaupten, dass eine durch den Mitentwickler durchgeführte Prüfung ein unabhängiges Sicherheitsgutachten sei.
 
 Bei funktionalen Änderungen zusätzlich prüfen, ob sich Datenarten, Empfänger, Sichtbarkeit, Speicherfristen oder Drittanbieter ändern. In diesem Fall `datenschutz.html` und `datenschutz.pdf` in derselben Version sachlich aktualisieren und rendern. Eingebettete Dokumente haben nur eine äußere Zurück-/Download-Leiste; das Handbuch blendet seine Standalone-Leiste im eingebetteten Modus aus.
+
+Bei materiellen Änderungen des Zuschauer-Freigabetexts eine neue Hinweisversion verwenden. Fehlende/alte Freigaben nicht als Zustimmung auslegen; Maskierung von Profilbildern, historischen Teamnamen und Schreiberangaben sowie Widerruf serverseitig testen.
