@@ -1,9 +1,9 @@
-# Kartabend 31
+# Kartabend 32
 
 https://kolsbernd.github.io/Karten-App/
 
-Freiwillige, raum-/tischbezogene Ja-/Nein-Auswahl zur zusätzlichen Namens-/Bildanzeige für externe Zuschauer. Standard ohne Zustimmung: Anonym ohne Bild. Teilnahme bleibt auch bei Nein möglich. Einzelauswahl im Raum bzw. Tischstatistik und globaler Widerruf unter Einstellungen.
+Datenschutzhinweise bereits vor Registrierung sowie in der Bestätigungsmail als Online-/versionierter PDF-Link. Supabase bietet in der bestehenden Mailvorlage keinen Dateianhang; die Vorlage liegt unter supabase/templates/confirmation.html. Bestätigungsvariable bleibt unverändert. Die E-Mail-Bestätigung ist keine pauschale Einwilligung.
 
-Servermigration `32-zuschauer-einwilligung.sql` baut auf Version 30 auf. Keine frühere globale Betreiberfreigabe wird als persönliche Zustimmung übernommen. Installation erfasst selbst keine Einwilligung.
+Über die App zeigt die Version rechts oben. Der alte Einladungslink-Button ist entfernt; der Beitritts-QR einschließlich Link kopieren bleibt. Ältere Nachrichten ist im Chat ausgeblendet, Verläufe bleiben gespeichert.
 
-Nutzerhandbuch und Datenschutzerklärung aktualisiert. `Pruefung-Version31.md` und `Rechtliche-Hinweise-Version31.md` nennen Nachweise und Grenzen. Nach Veröffentlichung neu laden.
+Keine neue Datenbankmigration erforderlich. Handbuch HTML/PDF aktualisiert. Nach Veröffentlichung neu laden.
