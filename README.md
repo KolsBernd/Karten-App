@@ -1,17 +1,30 @@
-# Kartabend 37
+# Kartabend 38
 
 https://kolsbernd.github.io/Karten-App/
 
 ## Änderungen
 
-- Turnierersteller können eigene archivierte Turniere nach links wischen und nach Ja/Nein-Bestätigung löschen. Aktive und fremde Turniere sind serverseitig gesperrt. Persönliche Ergebnisse registrierter Teilnehmer bleiben erhalten, Gaststatistiken und Verläufe verschwinden mit den Tischen.
-- Profilpunkte sind tatsächlich erzielte Punkte, auch bei Niederlagen. 12:21 ergibt 12 Punkte und −9 Nettopunkte. Nettopunkte nur für Bierkopf/Schleifer. Tabelle und Kennzahlen enthalten eine Gesamtsumme sowie registrierte Turnierergebnisse einschließlich Schafkopf. Allgemeine Ranglisten bleiben beim Verschieben gelöschter Turnierergebnisse in den Ergebnisnachweis stabil.
-- Raumsymbole entsprechen der Navigation: Pokal, Spielkarten, Fragezeichen. Nachrichten-Swipe unterstützt mobile Zeigergesten; ein Swipe öffnet keine Karte versehentlich.
-- Einheitliche Aktionshöhen in vergleichbaren Gruppen, gleich breite Tisch-/Verlaufsbuttons. Rücknahme heißt Letzte Partie zurücknehmen und verlangt stets Ja/Nein, auch im QR-Erfassungszugang. Fehlende Tischberechtigung wird als Popup erklärt.
-- Anfrage-Umwandlung wechselt in aktive Räume und schließt den Erstellmodus. Umgewandelte Anfragen erscheinen nicht zusätzlich im Archiv; + aus dem Archiv wechselt zuerst zur aktiven Ansicht.
+- Anmeldung, Raumzustand und Profilauswertung liegen in eigenen Modulen. Der bisherige Einstiegspunkt delegiert über explizite Adapter; die vorhandenen Regressionstests bleiben erhalten und sind unter `tests/` ausführbar.
+- Turnier abbrechen steht am Ende der Verwaltung in voller Breite. Startnummern haben eine eigene Tabellenspalte. Der Archiv-Löschbutton erscheint erst nach Swipe; Entf am fokussierten Eintrag ist die Tastaturalternative.
+- Ein freiwilliges Turnierlogo kann vor dem Start hochgeladen oder entfernt werden. Lokale Verkleinerung und PNG-Neucodierung entfernen ursprüngliche Metadaten; der Server begrenzt Format, Größe und Abmessungen. Überschriften verwenden das Logo in Schriftgröße.
+- Profilbilder bestätigter Freunde öffnen deren aggregierte Spielstatistik. Blockierungen und Freundschaft werden serverseitig geprüft; Kontaktangaben und Raum-/Chatdetails sind nicht enthalten.
+- Ein bereinigtes Fehlerprotokoll zählt Fehlercodes, Bereiche, Version und Zeitpunkte. Nur Kolsbernd darf die Übersicht abrufen. Keine Rohmeldungen, Stapelverläufe, URLs, Chat- oder Kontaktdaten. Offline-Wiederholungen sind idempotent; Datenmengen, Übertragungsrate und Speicherung sind begrenzt.
+- Responsive Begrenzungen für Tabellen, Dialoge, lange Namen und Formulare; Handbuch und Datenschutz auf demselben Stand.
 
-## Aufbau der geänderten Abläufe
+## Module
 
-ui37.js kapselt barrierearme Dialoge und lokale Navigationssymbole. chat-gestures.js trennt Wischen von Klicks und vertikalem Scrollen. tournament.js bündelt Tischzugriff und bestätigte Archivaktionen. Die serverseitige Ergebnisprojektion berechnet Werte mengenbasiert mit einem einzigen Aggregat statt wiederholtem Kopieren wachsender JSON-Arrays. Mutation, Rechteprüfung und Erhalt registrierter Ergebnisse erfolgen atomar in der Datenbank. Normale interne round-/stage-Bezeichner bleiben stabil; geändert wurden die sichtbaren Buttontexte.
+`authentication.js`: Anmeldung, Registrierung, Wiederherstellung und Übergang in die angemeldete Ansicht.
 
-Migration 38-archiv-und-profilpunkte.sql baut auf Version 36 auf. Die Installation aktualisiert Funktionen und Ergebnisfelder, führt keine echte Archivlöschung und keinen Reset aus. Handbuch und Datenschutz aktualisiert. Umfang und Grenzen: Pruefung-Version37.md.
+`room-state.js`: Laden, Übernehmen, Speichern und Anwesenheit eines Raums. Die Eigentümerschaft des gemeinsamen Zustands verbleibt zunächst im Einstiegspunkt; Live-Getter/Setter verhindern veraltete Kopien und halten diesen schrittweisen Umbau kompatibel.
+
+`profile-statistics.js`: Ergebnisberechnung, gemeinsame Statistiktabelle sowie eigenes und befreundetes Profil. Raum- und Kontomutationen bleiben außerhalb der Auswertung.
+
+`error-log.js`: feste Fehlercodes, begrenzte Offline-Warteschlange, idempotente Übertragung und geschützte Anzeige. Die Erfassung darf niemals Spielabläufe unterbrechen.
+
+Die Module werden ohne Build-Schritt vor dem Online-Einstieg geladen und gehören zum Offline-Zwischenspeicher. Bestehende Funktionsnamen bleiben als schmale Delegationen erhalten. `tournament.js` ist zur leichteren Wartung lesbar formatiert.
+
+## Datenbank und Prüfung
+
+Migration `39-module-freundesstatistik-und-fehler.sql` baut auf Version 37 / Migration 38 auf. Sie aktualisiert Funktionen und ergänzt geschützte Diagnose-Tabellen; sie führt keinen Spielreset aus. In Supabase ist sie für Version 38 bereits installiert. Nicht durch Rücknahme auf ein altes Gesamtschema ersetzen.
+
+Die Frontend-Regressionssuite ist unter `tests/README.md` beschrieben. Prüfumfang, Datenschutz und Grenzen der Geräteprüfung stehen in `Pruefung-Version38.md`. Eine Sichtprüfung auf physischen iPhones/iPads ist damit nicht ersetzt.

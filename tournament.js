@@ -1,98 +1,1372 @@
 /* Kartabend Turniere: authentifizierte, serverseitig abgegrenzte Tische. */
-(()=>{'use strict';
-const $=id=>document.getElementById(id),el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
-let archiveGestureActive=false,archiveReveal=null,overviewOpen=false,ctx=null,active=null,tableId=null,busy=false,selected=[],editingTable=null,directory=[],searchTimer,requestGeneration=0,editorOpen=false,settingsExpanded=false,historyExpanded=false,tableExpanded=new Set(),archive=false,lobbyRows=[];
-const content=()=>$('hhTournamentContent');
-function button(text,fn,cls=''){const b=el('button',cls,text);b.type='button';b.onclick=()=>run(fn);return b}
-async function run(fn){if(busy)return;busy=true;content().setAttribute('aria-busy','true');try{await fn()}catch(e){ctx?.fail(e);if(ctx&&active&&String(e.message||e).includes('inzwischen')){try{await reload()}catch(loadError){ctx?.fail(loadError)}}}finally{busy=false;content().removeAttribute('aria-busy')}}
-async function rpc(action,id=null,body={}){const c=ctx;const r=await c.client.rpc('hh_tournament_action',{p_action:action,p_id:id,p_body:body});if(c!==ctx)throw Error('Konto wurde gewechselt.');if(r.error)throw r.error;return ctx.display?ctx.display(r.data):r.data}
-function displayName(p,limit=24){return window.HHTableNames?.name({...p,full_name:p?.full_name||[p?.first_name,p?.last_name].filter(Boolean).join(' ')||p?.username},limit)||p?.full_name||p?.username||'Spieler'}
-function face(p){const wrap=el('span','tt-person');const img=el('img','tt-avatar');if(typeof p?.avatar==='string'&&/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(p.avatar)){img.src=p.avatar;img.alt='';wrap.append(img)}else wrap.append(el('span','tt-avatar tt-initial',(displayName(p)||'?').slice(0,1).toUpperCase()));wrap.append(el('span','',(p?.start_no?'#'+p.start_no+' · ':'')+displayName(p)));return wrap}
-function people(ids){const row=el('div','tt-people');for(const id of ids)row.append(face(active.people.find(p=>p.user_id===id)));return row}
-function teamPeople(ids){const row=el('div','tt-team-name');for(const id of ids){const p=active.people.find(p=>p.user_id===id);const full=p?.full_name||p?.username||'Spieler';const label=window.HHTableNames?.name({...p,name:full},Math.max(16,Math.floor((Math.min(innerWidth,700)-200)/7)))||full;const person=face({...p,username:label});person.title=full;person.dataset.tableName='true';person.dataset.startNo=p?.start_no||'';person.dataset.fullName=full;person.dataset.firstName=p?.first_name||'';person.dataset.lastName=p?.last_name||'';row.append(person)}requestAnimationFrame(()=>window.HHTableNames?.fit(row));return row}
-function heading(title,back){const row=el('div','hh-lobby-title');row.append(el('h2','',title));if(back)row.append(button('Zurück',back,'ghost'));return row}
-function field(form,label,node){const l=el('label','',label);if(node.id)l.htmlFor=node.id;form.append(l,node);return node}
-function select(id,options){const n=el('select');n.id=id;for(const [value,label]of options){const o=el('option','',label);o.value=value;n.append(o)}return n}
-function settingsCopy(s){return (s.game||'Bierkopf')+' · '+s.target+' Partien je Runde · '+s.stages+' Runden · '+'Zufällige Teams nach jeder Runde'+' · Gewonnene Partien → erzielte Punkte'}
-function settingsForm(existing=null){editorOpen=true;const form=el('form','panel tt-settings');form.append(el('h3','','Turniereinstellungen'));const title=el('input');title.id='ttTitle';title.maxLength=60;title.required=true;field(form,'Turniername',title);const game=field(form,'Spiel',select('ttGame',[['Bierkopf','Bierkopf'],['Schafkopf','Schafkopf']]));
-const mode={value:'fixed'};const target=field(form,'Partien je Runde',select('ttTarget',Array.from({length:30},(_,i)=>[String(i+1),String(i+1)])));target.value='3';
-const stages=field(form,'Anzahl Runden',select('ttStages',Array.from({length:10},(_,i)=>[String(i+1),String(i+1)])));stages.value='3';const rotation={value:'players'};
-const ranking={value:'wins_points'};const draw=field(form,'Erste Teamzuordnung',select('ttDraw',[['true','Teams vor dem Start auslosen'],['false','Manuelle Teamzuordnung beibehalten']]));
-form.append(el('p','small muted','Sobald alle Tische fertig sind, startet der Ersteller die nächste Runde. Teams und Tische werden dafür neu ausgelost. Die erste Zuordnung bestimmst du selbst. Die Einstellungen sind nach Turnierstart festgelegt.'));
-const variants=el('fieldset','tt-schaf-variants');variants.append(el('legend','','Spielmöglichkeiten'));const choices=new Map();for(const name of ['King','Solo','Wenz','Geier','Sau','Kreuzspiel','Tout']){const label=el('label','tt-variant-choice');const check=el('input');check.type='checkbox';check.value=name;check.checked=true;choices.set(name,check);label.append(check,document.createTextNode(name));variants.append(label)}const colorLabel=el('label','tt-variant-choice tt-capture-colors');const captureColors=el('input');captureColors.type='checkbox';captureColors.id='ttCaptureColors';captureColors.checked=!!existing?.settings?.capture_colors;colorLabel.append(captureColors,document.createTextNode('Farben erfassen'));const gameHint=el('p','small muted');function switchGame(reset){const schaf=game.value==='Schafkopf';variants.hidden=!schaf;colorLabel.hidden=!schaf;gameHint.textContent=schaf?'Jeder Eintrag ist eine Partie. Die Platznummer bestimmt bei Kreuzspiel die Partner 1 + 3 und 2 + 4.':'Eine Partie geht bis 21. Die Teams bleiben bis Rundenende zusammen.';if(reset){target.value=schaf?'30':'3';stages.value=schaf?'2':'3'}}game.onchange=()=>switchGame(true);form.append(variants,colorLabel,gameHint);switchGame(false);
-const submit=el('button','primary','Turnier vorbereiten');submit.type='submit';form.append(submit);if(existing){title.value=existing.title;game.value=existing.settings.game||'Bierkopf';for(const [name,check]of choices)check.checked=(existing.settings.variants||['King','Solo','Wenz','Geier','Sau','Kreuzspiel','Tout']).includes(name);switchGame(false);target.value=existing.settings.target;stages.value=existing.settings.stages;draw.value=String(existing.settings.draw!==false);submit.textContent='Einstellungen speichern'}form.onsubmit=e=>{e.preventDefault();run(async()=>{const result=await rpc(existing?'settings':'create',existing?.id||null,{title:title.value.trim(),settings:{game:game.value,capture_colors:game.value==='Schafkopf'&&captureColors.checked,variants:game.value==='Schafkopf'?[...choices].filter(([,n])=>n.checked).map(([name])=>name):[],mode:mode.value,target:Number(target.value),stages:Number(stages.value),rotation:rotation.value,ranking:ranking.value,draw:draw.value==='true'}});editorOpen=false;settingsExpanded=false;await open(result.id)})};return form}
-
-// Opening and destructive archive actions have separate server permissions.
-async function openTableWithNotice(table) {
-  const assigned = active.admin || table.players.includes(ctx.user.id);
-  if (!assigned) {
-    await window.HHDialogs.notice('Kein Zugriff auf diesen Tisch', 'Du bist diesem Tisch nicht zugeteilt. Nur die zugeteilten Spieler und der Turnierersteller können ihn öffnen.');
-    return;
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id), el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls)
+        n.className = cls;
+      if (text !== undefined)
+        n.textContent = text;
+      return n;
+    };
+  let archiveGestureActive = false, archiveReveal = null, overviewOpen = false, ctx = null, active = null, tableId = null, busy = false, selected = [], editingTable = null, directory = [], searchTimer, requestGeneration = 0, editorOpen = false, settingsExpanded = false, historyExpanded = false, tableExpanded = new Set(), archive = false, lobbyRows = [];
+  const content = () => $('hhTournamentContent');
+  function button(text, fn, cls = '') {
+    const b = el('button', cls, text);
+    b.type = 'button';
+    b.onclick = () => run(fn);
+    return b;
   }
-  try { await ctx.openTable(table.id, active.id); }
-  catch (error) {
-    if (/Zugriff|zugeteilt|Teilnehmer|nicht verfügbar/.test(error.message || '')) {
-      await window.HHDialogs.notice('Tisch nicht verfügbar', error.message);
-    } else throw error;
+  async function run(fn) {
+    if (busy)
+      return;
+    busy = true;
+    content().setAttribute('aria-busy', 'true');
+    try {
+      await fn();
+    } catch (e) {
+      ctx?.fail(e);
+      if (ctx && active && String(e.message || e).includes('inzwischen')) {
+        try {
+          await reload();
+        } catch (loadError) {
+          ctx?.fail(loadError);
+        }
+      }
+    } finally {
+      busy = false;
+      content().removeAttribute('aria-busy');
+    }
   }
-}
-function archivedCard(card, tournament, refresh) {
-  if (tournament.created_by !== ctx.user.id || !['finished', 'cancelled'].includes(tournament.status)) return card;
-  const wrapper = el('div', 'ev-request-swipe tt-archive-swipe');
-  wrapper.append(card);
-  if (archiveReveal === tournament.id) wrapper.classList.add('ev-swipe-open');
-  window.HHChatGestures.swipe(wrapper, card, {
-    ariaLabel: 'Archiviertes Turnier löschen',
-    interacting: value => { archiveGestureActive = value; },
-    revealed: value => { archiveReveal = value ? tournament.id : null; },
-    remove: () => run(async () => {
-      if (!await ctx.confirm('Turnier endgültig löschen?', tournament.title + ' samt Tischen und Verläufen löschen? Persönliche Ergebnisse registrierter Spieler bleiben erhalten.')) return;
-      const result = await ctx.client.rpc('hh_delete_archived_tournament', {p_tournament: tournament.id});
-      if (result.error) throw result.error;
+  async function rpc(action, id = null, body = {}) {
+    const c = ctx;
+    const r = await c.client.rpc('hh_tournament_action', {
+      p_action: action,
+      p_id: id,
+      p_body: body
+    });
+    if (c !== ctx)
+      throw Error('Konto wurde gewechselt.');
+    if (r.error)
+      throw r.error;
+    return ctx.display ? ctx.display(r.data) : r.data;
+  }
+  function displayName(p, limit = 24) {
+    return window.HHTableNames?.name({
+      ...p,
+      full_name: p?.full_name || [
+        p?.first_name,
+        p?.last_name
+      ].filter(Boolean).join(' ') || p?.username
+    }, limit) || p?.full_name || p?.username || 'Spieler';
+  }
+  function face(p) {
+    const wrap = el('span', 'tt-person');
+    const img = el('img', 'tt-avatar');
+    if (typeof p?.avatar === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(p.avatar)) {
+      img.src = p.avatar;
+      img.alt = '';
+      wrap.append(img);
+    } else
+      wrap.append(el('span', 'tt-avatar tt-initial', (displayName(p) || '?').slice(0, 1).toUpperCase()));
+    wrap.append(el('span', '', displayName(p)));
+    return wrap;
+  }
+  function people(ids) {
+    const row = el('div', 'tt-people');
+    for (const id of ids)
+      row.append(face(active.people.find(p => p.user_id === id)));
+    return row;
+  }
+  function teamPeople(ids) {
+    const row = el('div', 'tt-team-name');
+    for (const id of ids) {
+      const p = active.people.find(p => p.user_id === id);
+      const full = p?.full_name || p?.username || 'Spieler';
+      const label = window.HHTableNames?.name({
+        ...p,
+        name: full
+      }, Math.max(16, Math.floor((Math.min(innerWidth, 700) - 200) / 7))) || full;
+      const person = face({
+        ...p,
+        username: label
+      });
+      person.title = full;
+      person.dataset.tableName = 'true';
+      person.dataset.startNo = '';
+      person.dataset.fullName = full;
+      person.dataset.firstName = p?.first_name || '';
+      person.dataset.lastName = p?.last_name || '';
+      row.append(person);
+    }
+    requestAnimationFrame(() => window.HHTableNames?.fit(row));
+    return row;
+  }
+  function titleLogo(value) {
+    if (typeof value !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(value) || value.length > 60000)
+      return null;
+    const img = el('img', 'tt-title-logo');
+    img.src = value;
+    img.alt = '';
+    return img;
+  }
+  function heading(title, back, logo) {
+    const row = el('div', 'hh-lobby-title');
+    const h = el('h2', '', title), img = titleLogo(logo);
+    if (img)
+      h.prepend(img);
+    row.append(h);
+    if (back)
+      row.append(button('Zurück', back, 'ghost'));
+    return row;
+  }
+  function field(form, label, node) {
+    const l = el('label', '', label);
+    if (node.id)
+      l.htmlFor = node.id;
+    form.append(l, node);
+    return node;
+  }
+  function select(id, options) {
+    const n = el('select');
+    n.id = id;
+    for (const [value, label] of options) {
+      const o = el('option', '', label);
+      o.value = value;
+      n.append(o);
+    }
+    return n;
+  }
+  function settingsCopy(s) {
+    return (s.game || 'Bierkopf') + ' \xB7 ' + s.target + ' Partien je Runde \xB7 ' + s.stages + ' Runden \xB7 ' + 'Zufällige Teams nach jeder Runde' + ' \xB7 Gewonnene Partien \u2192 erzielte Punkte';
+  }
+  /** Decode and resize locally. The server accepts only bounded PNG data, never SVG or remote URLs. */
+  async function prepareLogo(file) {
+    if (![
+        'image/png',
+        'image/jpeg',
+        'image/webp'
+      ].includes(file.type) || file.size > 5 * 1024 * 1024)
+      throw Error('Bitte PNG, JPEG oder WebP bis 5 MB wählen.');
+    const url = URL.createObjectURL(file), image = new Image();
+    try {
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(Error('Bild konnte nicht gelesen werden.'));
+        image.src = url;
+      });
+      if (!image.naturalWidth || !image.naturalHeight || image.naturalWidth * image.naturalHeight > 40000000)
+        throw Error('Bildabmessungen sind zu groß.');
+      for (const size of [
+          128,
+          96,
+          64
+        ]) {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, size / Math.max(image.naturalWidth, image.naturalHeight));
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        const value = canvas.toDataURL('image/png');
+        if (value.length <= 60000)
+          return value;
+      }
+      throw Error('Bitte ein kleineres Logo wählen.');
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+  function logoPicker(form, initial) {
+    const state = {
+        value: initial || null,
+        busy: false
+      }, box = el('div', 'tt-logo-picker'), input = el('input'), preview = el('div'), message = el('p', 'small muted', 'Freiwillig: PNG, JPEG oder WebP bis 5 MB. Das Logo wird verkleinert; Bildmetadaten werden entfernt.');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.id = 'ttLogo';
+    field(box, 'Turnierlogo (optional)', input);
+    const remove = el('button', 'ghost', 'Logo entfernen');
+    remove.type = 'button';
+    let generation = 0;
+    function draw() {
+      preview.replaceChildren();
+      const image = titleLogo(state.value);
+      if (image)
+        preview.append(image);
+      remove.hidden = !state.value;
+    }
+    remove.onclick = () => {
+      generation++;
+      state.value = null;
+      state.busy = false;
+      input.value = '';
+      draw();
+    };
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file)
+        return;
+      const token = ++generation;
+      state.busy = true;
+      message.textContent = 'Logo wird vorbereitet \u2026';
+      try {
+        const value = await prepareLogo(file);
+        if (token !== generation)
+          return;
+        state.value = value;
+        draw();
+        message.textContent = 'Logo vorbereitet. Es wird mit den Einstellungen gespeichert.';
+      } catch (error) {
+        if (token === generation)
+          message.textContent = error.message;
+      } finally {
+        if (token === generation)
+          state.busy = false;
+      }
+    };
+    box.append(preview, remove, message);
+    form.append(box);
+    draw();
+    return state;
+  }
+  function settingsForm(existing = null) {
+    editorOpen = true;
+    const form = el('form', 'panel tt-settings');
+    form.append(el('h3', '', 'Turniereinstellungen'));
+    const title = el('input');
+    title.id = 'ttTitle';
+    title.maxLength = 60;
+    title.required = true;
+    field(form, 'Turniername', title);
+    const game = field(form, 'Spiel', select('ttGame', [
+      [
+        'Bierkopf',
+        'Bierkopf'
+      ],
+      [
+        'Schafkopf',
+        'Schafkopf'
+      ]
+    ]));
+    const mode = { value: 'fixed' };
+    const target = field(form, 'Partien je Runde', select('ttTarget', Array.from({ length: 30 }, (_, i) => [
+      String(i + 1),
+      String(i + 1)
+    ])));
+    target.value = '3';
+    const stages = field(form, 'Anzahl Runden', select('ttStages', Array.from({ length: 10 }, (_, i) => [
+      String(i + 1),
+      String(i + 1)
+    ])));
+    stages.value = '3';
+    const rotation = { value: 'players' };
+    const ranking = { value: 'wins_points' };
+    const draw = field(form, 'Erste Teamzuordnung', select('ttDraw', [
+      [
+        'true',
+        'Teams vor dem Start auslosen'
+      ],
+      [
+        'false',
+        'Manuelle Teamzuordnung beibehalten'
+      ]
+    ]));
+    form.append(el('p', 'small muted', 'Sobald alle Tische fertig sind, startet der Ersteller die nächste Runde. Teams und Tische werden dafür neu ausgelost. Die erste Zuordnung bestimmst du selbst. Die Einstellungen sind nach Turnierstart festgelegt.'));
+    const variants = el('fieldset', 'tt-schaf-variants');
+    variants.append(el('legend', '', 'Spielmöglichkeiten'));
+    const choices = new Map();
+    for (const name of [
+        'King',
+        'Solo',
+        'Wenz',
+        'Geier',
+        'Sau',
+        'Kreuzspiel',
+        'Tout'
+      ]) {
+      const label = el('label', 'tt-variant-choice');
+      const check = el('input');
+      check.type = 'checkbox';
+      check.value = name;
+      check.checked = true;
+      choices.set(name, check);
+      label.append(check, document.createTextNode(name));
+      variants.append(label);
+    }
+    const colorLabel = el('label', 'tt-variant-choice tt-capture-colors');
+    const captureColors = el('input');
+    captureColors.type = 'checkbox';
+    captureColors.id = 'ttCaptureColors';
+    captureColors.checked = !!existing?.settings?.capture_colors;
+    colorLabel.append(captureColors, document.createTextNode('Farben erfassen'));
+    const gameHint = el('p', 'small muted');
+    function switchGame(reset) {
+      const schaf = game.value === 'Schafkopf';
+      variants.hidden = !schaf;
+      colorLabel.hidden = !schaf;
+      gameHint.textContent = schaf ? 'Jeder Eintrag ist eine Partie. Die Platznummer bestimmt bei Kreuzspiel die Partner 1 + 3 und 2 + 4.' : 'Eine Partie geht bis 21. Die Teams bleiben bis Rundenende zusammen.';
+      if (reset) {
+        target.value = schaf ? '30' : '3';
+        stages.value = schaf ? '2' : '3';
+      }
+    }
+    game.onchange = () => switchGame(true);
+    form.append(variants, colorLabel, gameHint);
+    switchGame(false);
+    const logoControl = logoPicker(form, existing?.settings?.logo);
+    const submit = el('button', 'primary', 'Turnier vorbereiten');
+    submit.type = 'submit';
+    form.append(submit);
+    if (existing) {
+      title.value = existing.title;
+      game.value = existing.settings.game || 'Bierkopf';
+      for (const [name, check] of choices)
+        check.checked = (existing.settings.variants || [
+          'King',
+          'Solo',
+          'Wenz',
+          'Geier',
+          'Sau',
+          'Kreuzspiel',
+          'Tout'
+        ]).includes(name);
+      switchGame(false);
+      target.value = existing.settings.target;
+      stages.value = existing.settings.stages;
+      draw.value = String(existing.settings.draw !== false);
+      submit.textContent = 'Einstellungen speichern';
+    }
+    form.onsubmit = e => {
+      e.preventDefault();
+      if (logoControl.busy)
+        return;
+      run(async () => {
+        const result = await rpc(existing ? 'settings' : 'create', existing?.id || null, {
+          title: title.value.trim(),
+          settings: {
+            logo: logoControl.value,
+            game: game.value,
+            capture_colors: game.value === 'Schafkopf' && captureColors.checked,
+            variants: game.value === 'Schafkopf' ? [...choices].filter(([, n]) => n.checked).map(([name]) => name) : [],
+            mode: mode.value,
+            target: Number(target.value),
+            stages: Number(stages.value),
+            rotation: rotation.value,
+            ranking: ranking.value,
+            draw: draw.value === 'true'
+          }
+        });
+        editorOpen = false;
+        settingsExpanded = false;
+        await open(result.id);
+      });
+    };
+    return form;
+  }
+  // Opening and destructive archive actions have separate server permissions.
+  async function openTableWithNotice(table) {
+    const assigned = active.admin || table.players.includes(ctx.user.id);
+    if (!assigned) {
+      await window.HHDialogs.notice('Kein Zugriff auf diesen Tisch', 'Du bist diesem Tisch nicht zugeteilt. Nur die zugeteilten Spieler und der Turnierersteller können ihn öffnen.');
+      return;
+    }
+    try {
+      await ctx.openTable(table.id, active.id);
+    } catch (error) {
+      if (/Zugriff|zugeteilt|Teilnehmer|nicht verfügbar/.test(error.message || '')) {
+        await window.HHDialogs.notice('Tisch nicht verfügbar', error.message);
+      } else
+        throw error;
+    }
+  }
+  function archivedCard(card, tournament, refresh) {
+    if (tournament.created_by !== ctx.user.id || ![
+        'finished',
+        'cancelled'
+      ].includes(tournament.status))
+      return card;
+    const wrapper = el('div', 'ev-request-swipe tt-archive-swipe');
+    wrapper.append(card);
+    if (archiveReveal === tournament.id)
+      wrapper.classList.add('ev-swipe-open');
+    window.HHChatGestures.swipe(wrapper, card, {
+      ariaLabel: 'Archiviertes Turnier löschen',
+      interacting: value => {
+        archiveGestureActive = value;
+      },
+      revealed: value => {
+        archiveReveal = value ? tournament.id : null;
+      },
+      remove: removeTournament
+    });
+    card.setAttribute('aria-keyshortcuts', 'Delete');
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Delete') {
+        event.preventDefault();
+        removeTournament();
+      }
+    });
+    function removeTournament() {
+      return run(async () => {
+        if (!await ctx.confirm('Turnier endgültig löschen?', tournament.title + ' samt Tischen und Verläufen löschen? Persönliche Ergebnisse registrierter Spieler bleiben erhalten.'))
+          return;
+        const result = await ctx.client.rpc('hh_delete_archived_tournament', { p_tournament: tournament.id });
+        if (result.error)
+          throw result.error;
+        archiveReveal = null;
+        lobbyRows = lobbyRows.filter(row => row.id !== tournament.id);
+        await refresh();
+      });
+    }
+    return wrapper;
+  }
+  async function list() {
+    overviewOpen = false;
+    editorOpen = false;
+    active = null;
+    tableId = null;
+    editingTable = null;
+    selected = [];
+    content().replaceChildren();
+    const h = heading('Turnier');
+    const b = button('+', () => {
+      content().replaceChildren(heading('Neues Turnier', list), settingsForm());
+    });
+    b.setAttribute('aria-label', 'Neues Turnier erstellen');
+    if (ctx.admin)
+      h.append(b);
+    content().append(h);
+    const tabs = el('div', 'hh-archive-tabs');
+    for (const [value, label] of [
+        [
+          false,
+          'Aktive Turniere'
+        ],
+        [
+          true,
+          'Archiv'
+        ]
+      ]) {
+      const b = button(label, () => {
+        archive = value;
+        return list();
+      });
+      b.setAttribute('aria-pressed', String(value === archive));
+      tabs.append(b);
+    }
+    content().append(tabs);
+    const rows = (await rpc('list')).filter(t => archive ? [
+      'finished',
+      'cancelled'
+    ].includes(t.status) : ![
+      'finished',
+      'cancelled'
+    ].includes(t.status));
+    if (!rows.length)
+      content().append(el('p', 'muted', 'Noch kein Turnier vorhanden.'));
+    for (const t of rows) {
+      const card = button('', () => open(t.id), 'panel tt-list-card');
+      const name = el('strong', '', t.title), logo = titleLogo(t.settings.logo);
+      if (logo)
+        name.prepend(logo);
+      card.append(name, el('span', 'small muted', settingsCopy(t.settings)), el('span', 'tt-status', t.status === 'draft' ? 'Vorbereitet' : t.status === 'finished' ? 'Beendet' : t.status === 'cancelled' ? 'Abgebrochen' : 'Runde ' + t.stage + ' \xB7 ' + t.done + '/' + t.tables + ' Tische fertig'));
+      content().append(archivedCard(card, t, list));
+    }
+  }
+  async function open(id) {
+    overviewOpen = false;
+    editorOpen = false;
+    active = await rpc('detail', id);
+    tableId = null;
+    editingTable = null;
+    selected = [];
+    render();
+  }
+  function seatPoints(t) {
+    if (active.settings.game === 'Schafkopf')
+      return t.scores;
+    const totals = [
+      0,
+      0
+    ];
+    for (const g of t.games || [])
+      for (let i = 0; i < 2; i++)
+        totals[i] += Number(g.scores[i]) || 0;
+    if (!t.done)
+      for (let i = 0; i < 2; i++)
+        totals[i] += Number(t.scores[i]) || 0;
+    return [
+      totals[0],
+      totals[0],
+      totals[1],
+      totals[1]
+    ];
+  }
+  function playerStrip(t) {
+    const strip = el('div', 'tt-table-player-strip'), scores = seatPoints(t);
+    for (let i = 0; i < 4; i++) {
+      const p = active.people.find(p => p.user_id === t.players[i]);
+      const full = p?.full_name || p?.username || 'Freier Platz', first = p?.first_name || full.split(/\s+/)[0], last = p?.last_name || full.split(/\s+/).slice(1).join(' ');
+      const cell = el('div', 'tt-table-player');
+      cell.title = full;
+      cell.append(el('small', 'tt-start-number', p?.start_no ? 'Nr. ' + p.start_no : '\u2013'));
+      const avatar = face(p).firstElementChild;
+      cell.append(avatar, el('strong', 'tt-table-player-name', displayName(p, Math.max(10, Math.floor((Math.min(innerWidth, 700) - 110) / 28)))), el('small', 'tt-table-player-locality', p?.locality || ''), el('strong', 'tt-table-player-points', String(scores[i] || 0)));
+      strip.append(cell);
+    }
+    return strip;
+  }
+  function renderOverview() {
+    const id = active.id, root = content();
+    root.replaceChildren(heading('Tischübersicht', () => open(id)), el('p', 'small muted', active.title + ' \xB7 Runde ' + active.stage));
+    const grid = el('div', 'tt-overview-grid');
+    for (const t of active.tables.filter(t => t.stage === active.stage)) {
+      const points = seatPoints(t), card = button('', async () => {
+          await openTableWithNotice(t);
+        }, 'panel tt-overview-card');
+      card.setAttribute('aria-label', 'Tisch ' + t.table_no + ' öffnen');
+      card.append(el('h3', '', 'Tisch ' + t.table_no), el('strong', 'tt-overview-total', String(points.reduce((a, b) => a + b, 0))), el('small', 'muted', 'Spielerpunkte insgesamt'), el('p', 'tt-overview-seats', points.join(' \u2013 ')), el('p', 'tt-status' + (!t.done && active.status === 'running' ? ' tt-running' : ''), t.done ? 'Runde beendet' : active.status === 'running' ? 'Spielt noch' : 'Beendet'));
+      grid.append(card);
+    }
+    root.append(grid);
+  }
+  async function tableOverview() {
+    editorOpen = true;
+    overviewOpen = true;
+    active = await rpc('detail', active.id);
+    renderOverview();
+  }
+  function tableCard(t) {
+    const participant = t.players.includes(ctx.user.id), canPlay = active.status === 'running' && (participant || active.admin) && t.stage === active.stage;
+    const card = el('div', 'panel tt-list-card tt-tournament-table');
+    card.append(el('strong', '', 'Tisch ' + t.table_no + ' \xB7 Runde ' + t.stage), playerStrip(t), el('span', 'tt-status' + (active.status === 'running' && !t.done && t.stage === active.stage ? ' tt-running' : ''), active.status === 'cancelled' ? 'Turnier abgebrochen' : active.status === 'finished' ? 'Turnier beendet \xB7 ' + t.games.length + ' Partien' : t.done ? 'Runde beendet \xB7 ' + t.games.length + ' / ' + active.settings.target + ' Partien' : active.status === 'draft' ? 'Bereit' : t.stage === active.stage ? 'Partie läuft' : 'Abgeschlossen'));
+    if (active.admin && (active.status === 'draft' || active.status === 'running' && t.stage === active.stage))
+      card.append(button(active.status === 'draft' ? 'Tischeinladung' : 'Spielstand-QR-Code', () => inviteDialog(t), 'ghost'));
+    if (active.admin && active.status === 'running' && t.stage === active.stage && !t.done)
+      card.append(button('Erfassung per QR-Code', () => captureInvite(t), 'ghost'));
+    if (canPlay && !t.done) {
+      card.append(button('Tisch öffnen', () => openTableWithNotice(t), 'primary hh-wide-button'));
+    } else if (active.status === 'running' && !active.admin && !participant)
+      card.append(el('small', 'muted', 'Zugriff nur für die zugeteilten Spieler'));
+    if (active.admin && active.status === 'draft')
+      card.append(button('Teams bearbeiten', () => {
+        editingTable = t.id;
+        selected = t.players.filter(Boolean);
+        tableId = null;
+        render();
+      }, 'ghost'));
+    if ((active.admin || participant) && (t.games.length || t.rounds?.length))
+      card.append(button('Bisherige Partien und Runden', () => tableHistory(t), 'ghost hh-wide-button tt-history-button'));
+    const controls = [...card.children].filter(n => n.tagName === 'BUTTON');
+    if (controls.length) {
+      const actions = el('div', 'tt-table-actions');
+      actions.append(...controls);
+      card.append(actions);
+    }
+    if (!t.done)
+      return card;
+    const disclosure = el('details', 'panel tt-completed-table');
+    disclosure.open = tableExpanded.has(t.id);
+    const summary = el('summary', 'tt-completed-summary');
+    summary.append(el('strong', '', 'Tisch ' + t.table_no + ' \xB7 Runde ' + t.stage + ' beendet'));
+    const result = el('div', 'tt-completed-results');
+    result.append(playerStrip(t));
+    summary.append(result, el('small', 'muted', 'Details anzeigen'));
+    disclosure.append(summary, card);
+    disclosure.ontoggle = () => {
+      if (disclosure.open)
+        tableExpanded.add(t.id);
+      else
+        tableExpanded.delete(t.id);
+    };
+    return disclosure;
+  }
+  function schafRankings() {
+    const rows = active.people.map(p => ({
+      id: p.user_id,
+      ids: [p.user_id],
+      games: 0,
+      wins: 0,
+      points: 0,
+      against: 0
+    }));
+    const byId = new Map(rows.map(r => [
+      r.id,
+      r
+    ]));
+    for (const t of active.results || [])
+      for (const g of t.games || [])
+        t.players.forEach((id, i) => {
+          const r = byId.get(id);
+          if (r) {
+            r.games++;
+            r.points += Number(g.scores[i]) || 0;
+            r.wins += Number((g.winners || []).includes(i));
+          }
+        });
+    rows.sort((a, b) => b.wins - a.wins || b.points - a.points);
+    rows.forEach((r, i) => r.rank = i && rows[i - 1].wins === r.wins && rows[i - 1].points === r.points ? rows[i - 1].rank : i + 1);
+    return {
+      players: rows,
+      teams: []
+    };
+  }
+  function rankings() {
+    if (active.settings.game === 'Schafkopf')
+      return schafRankings();
+    const ps = new Map(active.people.map(p => [
+        p.user_id,
+        {
+          id: p.user_id,
+          ids: [p.user_id],
+          games: 0,
+          wins: 0,
+          points: 0,
+          against: 0
+        }
+      ])), teams = new Map();
+    for (const t of active.results || [])
+      for (const g of t.games || [])
+        for (let side = 0; side < 2; side++) {
+          const ids = t.players.slice(side * 2, side * 2 + 2), key = [...ids].sort().join('|');
+          if (!teams.has(key))
+            teams.set(key, {
+              id: key,
+              ids,
+              games: 0,
+              wins: 0,
+              points: 0,
+              against: 0
+            });
+          for (const x of [
+              teams.get(key),
+              ...ids.map(id => ps.get(id))
+            ]) {
+            if (!x)
+              continue;
+            x.games++;
+            x.wins += Number(g.winner === side);
+            x.points += Number(g.scores[side]);
+            x.against += Number(g.scores[1 - side]);
+          }
+        }
+    const compare = (a, b) => b.wins - a.wins || b.points - a.points;
+    const rank = rows => {
+      rows.sort(compare);
+      let previous;
+      for (let i = 0; i < rows.length; i++) {
+        rows[i].rank = previous && compare(previous, rows[i]) === 0 ? previous.rank : i + 1;
+        previous = rows[i];
+      }
+      return rows;
+    };
+    return {
+      players: rank([...ps.values()]),
+      teams: rank([...teams.values()])
+    };
+  }
+  function rankingTable(title, rows) {
+    const panel = el('div', 'panel');
+    panel.append(el('h3', '', title));
+    const wrap = el('div', 'tt-table-wrap'), table = el('table', 'tt-ranking'), head = el('thead'), tr = el('tr');
+    for (const text of [
+        'Platz',
+        'Startnummer',
+        'Spieler / Team',
+        'Partien',
+        'Siege',
+        'Differenz',
+        'Punkte'
+      ])
+      tr.append(el('th', '', text));
+    head.append(tr);
+    table.append(head);
+    const body = el('tbody');
+    for (const x of rows) {
+      const row = el('tr', x.rank <= 3 ? 'tt-podium tt-place-' + x.rank : '');
+      row.append(el('td', '', String(x.rank)), el('td', '', x.ids.map(id => active.people.find(p => p.user_id === id)?.start_no || '\u2013').join(' / ')));
+      const names = el('td');
+      names.append(x.ids.length === 2 ? teamPeople(x.ids) : people(x.ids));
+      row.append(names, el('td', '', String(x.games)), el('td', '', String(x.wins)), el('td', '', String(x.points - x.against)), el('td', '', String(x.points)));
+      body.append(row);
+    }
+    table.append(body);
+    wrap.append(table);
+    panel.append(wrap);
+    if (!rows.length)
+      panel.append(el('p', 'small muted', 'Noch keine abgeschlossenen Partien.'));
+    return panel;
+  }
+  function awards(rank, force = false) {
+    if (active.status !== 'finished')
+      return;
+    const key = 'hh_tournament_awards:' + ctx.user.id + ':' + active.id;
+    if (!force && localStorage.getItem(key))
+      return;
+    localStorage.setItem(key, 'seen');
+    const dialog = $('hhTournamentAwards');
+    dialog.replaceChildren(el('h2', '', 'Turnier beendet'));
+    for (const place of [...new Set(rank.players.filter(x => x.rank <= 3).map(x => x.rank))]) {
+      const row = el('div', 'tt-award');
+      row.append(el('strong', '', place + '. Platz'), people(rank.players.filter(x => x.rank === place).flatMap(x => x.ids)));
+      dialog.append(row);
+    }
+    const minimum = Math.min(...rank.players.map(x => x.points));
+    if (rank.players.length) {
+      dialog.append(el('h3', '', 'Nüsskarter \xB7 wenigste Punkte'));
+      const row = el('div', 'tt-award');
+      row.append(people(rank.players.filter(x => x.points === minimum).flatMap(x => x.ids)), el('small', 'muted', minimum + ' Punkte'));
+      dialog.append(row);
+    }
+    if (rank.teams.length) {
+      dialog.append(el('h3', '', 'Bestes Team'));
+      for (const x of rank.teams.filter(x => x.rank === 1))
+        dialog.append(teamPeople(x.ids));
+    }
+    dialog.append(button('Ergebnisse ansehen', () => dialog.close(), 'primary'));
+    dialog.showModal();
+    dialog.querySelector('h2').tabIndex = -1;
+    dialog.querySelector('h2').focus({ preventScroll: true });
+    dialog.scrollTop = 0;
+  }
+  async function loadDirectory() {
+    directory = await rpc('directory', null, { search: $('ttDirectorySearch')?.value || '' });
+    renderDirectory();
+  }
+  function renderDirectory() {
+    const box = $('ttDirectory');
+    if (!box)
+      return;
+    box.replaceChildren();
+    const assigned = new Set(active.tables.filter(t => t.id !== editingTable).flatMap(t => t.players));
+    for (const p of directory.filter(p => !assigned.has(p.user_id))) {
+      const b = button('', () => {
+        if (selected.includes(p.user_id))
+          selected = selected.filter(id => id !== p.user_id);
+        else if (selected.length < 4)
+          selected.push(p.user_id);
+        renderDirectory();
+      });
+      b.className = 'tt-player-choice';
+      b.setAttribute('aria-pressed', String(selected.includes(p.user_id)));
+      b.append(face(p));
+      if (p.locality)
+        b.append(el('small', 'tt-player-locality', p.locality));
+      box.append(b);
+    }
+    const roster = $('ttSelected');
+    roster.replaceChildren();
+    const individual = active.settings.game === 'Schafkopf';
+    roster.classList.toggle('tt-selected-seats', individual);
+    for (let side = 0; side < (individual ? 4 : 2); side++) {
+      const row = el('div', 'tt-selected-team');
+      row.append(el('strong', '', individual ? 'Platz ' + (side + 1) : 'Team ' + (side === 0 ? 'A' : 'B')));
+      for (const id of individual ? selected.slice(side, side + 1) : selected.slice(side * 2, side * 2 + 2)) {
+        const p = directory.find(p => p.user_id === id) || active.people.find(p => p.user_id === id) || selectedPeople.get(id);
+        if (p)
+          row.append(face(p));
+      }
+      roster.append(row);
+    }
+    for (const p of directory)
+      selectedPeople.set(p.user_id, p);
+    $('ttAddTable').disabled = selected.length !== 4;
+  }
+  const selectedPeople = new Map();
+  function tableSetup() {
+    const panel = el('div', 'panel');
+    panel.append(el('h3', '', editingTable ? active.settings.game === 'Schafkopf' ? 'Sitzplätze bearbeiten' : 'Teams bearbeiten' : 'Tisch hinzufügen'), el('p', 'small muted', active.settings.game === 'Schafkopf' ? 'Wähle vier Spieler in der Reihenfolge Platz 1 bis 4. Bei Kreuzspiel spielen Platz 1 + 3 und 2 + 4 zusammen.' : 'Wähle zuerst zwei Spieler für Team A und danach zwei für Team B. Jeder Spieler kann zunächst nur einem Tisch zugeordnet werden.'));
+    const input = el('input');
+    input.id = 'ttDirectorySearch';
+    input.type = 'search';
+    input.placeholder = 'Name suchen';
+    input.setAttribute('aria-label', 'Turnierspieler suchen');
+    input.oninput = () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => run(loadDirectory), 250);
+    };
+    const choices = el('div', 'tt-directory');
+    choices.id = 'ttDirectory';
+    const chosen = el('div', 'tt-selected');
+    chosen.id = 'ttSelected';
+    const add = button(editingTable ? 'Teams speichern' : 'Tisch mit vier Spielern hinzufügen', async () => {
+      await rpc(editingTable ? 'replace_table' : 'table', active.id, {
+        players: selected,
+        table_id: editingTable
+      });
+      selected = [];
+      editingTable = null;
+      await reload();
+      await loadDirectory();
+    }, 'primary');
+    add.id = 'ttAddTable';
+    add.disabled = true;
+    panel.append(input, chosen, choices, add);
+    return panel;
+  }
+  async function reload() {
+    const old = active.stage;
+    active = await rpc('detail', active.id);
+    if (old !== active.stage)
+      tableId = null;
+    render();
+  }
+  function render() {
+    const root = content();
+    const previousHistory = $('ttPreviousRounds');
+    if (previousHistory)
+      historyExpanded = previousHistory.open;
+    root.replaceChildren(heading(active.title, list, active.settings.logo));
+    if (active.admin && active.status === 'draft')
+      root.append(button('Turniereinstellungen bearbeiten', () => {
+        root.replaceChildren(heading('Turniereinstellungen', () => open(active.id)), settingsForm(active));
+      }, 'ghost hh-wide-button'));
+    else
+      root.append(el('p', 'small muted', settingsCopy(active.settings)));
+    if (active.admin && active.status === 'draft')
+      root.append(button('Turniergäste verwalten', guests, 'ghost hh-wide-button'));
+    if (active.status === 'running')
+      root.append(button('Tischübersicht', tableOverview, 'ghost hh-wide-button'));
+    root.append(el('p', 'small muted', 'Runde ' + active.stage + ' / ' + active.settings.stages + ' \xB7 ' + (active.status === 'finished' ? 'Turnier beendet' : active.status === 'cancelled' ? 'Turnier abgebrochen' : active.status === 'draft' ? 'Vorbereitung' : 'Turnier läuft')));
+    if (active.admin && active.status === 'draft') {
+      root.append(tableSetup(), button('Turnier starten', async () => {
+        if (await ctx.confirm('Turnier starten?', 'Spiel, Partien je Runde und Anzahl Runden werden für dieses Turnier festgelegt.')) {
+          await rpc('start', active.id);
+          await reload();
+        }
+      }, 'primary hh-wide-button'));
+      queueMicrotask(() => loadDirectory().catch(e => ctx?.fail(e)));
+    }
+    if (active.status === 'finished')
+      root.append(button('Siegerehrung anzeigen', () => awards(rankings(), true), 'ghost hh-wide-button'));
+    const current = active.tables.filter(t => t.stage === active.stage);
+    if (active.status === 'running') {
+      const progress = el('div', 'panel tt-progress');
+      progress.append(el('h3', '', 'Runde ' + active.stage + ' \xB7 ' + current.filter(t => t.done).length + ' / ' + current.length + ' Tische fertig'));
+      progress.append(el('p', 'small muted', active.ready ? 'Alle Tische haben die vorgegebenen Partien beendet.' : 'Die nächste Runde kann starten, sobald alle Tische fertig sind.'));
+      if (active.admin && active.ready) {
+        const final = active.stage >= active.settings.stages;
+        progress.append(button(final ? 'Turnier beenden' : 'Nächste Runde auslosen und starten', async () => {
+          if (await ctx.confirm(final ? 'Turnier beenden?' : 'Nächste Runde starten?', final ? 'Ergebnisse abschließen und das Turnier ins Archiv verschieben?' : 'Alle Teams und Tische werden für die nächste Runde neu ausgelost.')) {
+            await rpc(final ? 'finish' : 'next_stage', active.id);
+            await reload();
+          }
+        }, 'primary hh-wide-button'));
+      }
+      root.append(progress);
+    }
+    for (const t of active.tables.filter(t => t.stage === active.stage))
+      root.append(tableCard(t));
+    if (!active.admin && !active.tables.some(t => t.stage === active.stage))
+      root.append(el('p', 'muted', 'Du bist für diese Runde noch keinem Tisch zugeteilt.'));
+    const old = active.tables.filter(t => t.stage !== active.stage);
+    if (old.length) {
+      const details = el('details', 'panel');
+      details.id = 'ttPreviousRounds';
+      details.open = historyExpanded;
+      details.append(el('summary', '', 'Bisherige Runden'));
+      for (const t of old)
+        details.append(tableCard(t));
+      root.append(details);
+    }
+    const rank = rankings();
+    root.append(rankingTable('Gesamtranking aller Spieler', rank.players));
+    if (active.settings.game === 'Schafkopf' && active.settings.capture_colors)
+      root.append(colorStatistics(active.results));
+    if (active.settings.game !== 'Schafkopf')
+      root.append(rankingTable('Team-Paare im Turnier', rank.teams));
+    if (active.admin && [
+        'draft',
+        'running'
+      ].includes(active.status))
+      root.append(button('Turnier abbrechen', async () => {
+        if (await ctx.confirm('Turnier abbrechen?', 'Das Turnier wird beendet und als abgebrochen archiviert. Bereits abgeschlossene Partien bleiben in der Statistik. Eine laufende Partie wird nicht gewertet.')) {
+          await rpc('cancel', active.id);
+          await reload();
+        }
+      }, 'ghost tt-cancel hh-wide-button'));
+    awards(rank);
+  }
+  async function guestRpc(action, id = null, body = {}) {
+    const result = await ctx.client.rpc('hh_tournament_guest', {
+      p_action: action,
+      p_id: id,
+      p_body: body
+    });
+    if (result.error)
+      throw result.error;
+    return result.data;
+  }
+  async function guests() {
+    editorOpen = true;
+    const root = content();
+    const tournamentId = active.id;
+    root.replaceChildren(heading('Turniergäste', () => open(tournamentId)));
+    const form = el('form', 'panel tt-settings');
+    form.append(el('h3', '', 'Gast hinzufügen'));
+    const inputs = {};
+    for (const [id, label, max] of [
+        [
+          'first',
+          'Vorname',
+          60
+        ],
+        [
+          'last',
+          'Nachname',
+          60
+        ],
+        [
+          'locality',
+          'Ort',
+          100
+        ]
+      ]) {
+      const input = el('input');
+      input.id = 'ttGuest' + id;
+      input.required = true;
+      input.maxLength = max;
+      field(form, label, input);
+      inputs[id] = input;
+    }
+    form.append(el('p', 'small muted', 'Gäste haben kein Benutzerkonto. Name und Ort können nach dem Anlegen nicht umbenannt werden. Bitte die Person über die Erfassung informieren.'));
+    const add = el('button', 'primary', 'Gast anlegen');
+    add.type = 'submit';
+    form.append(add);
+    form.onsubmit = e => {
+      e.preventDefault();
+      run(async () => {
+        await guestRpc('create', null, Object.fromEntries(Object.entries(inputs).map(([k, v]) => [
+          k,
+          v.value.trim()
+        ])));
+        await guests();
+      });
+    };
+    root.append(form);
+    const items = await guestRpc('list');
+    for (const p of items) {
+      const row = el('div', 'panel hh-social-row');
+      row.append(el('span', '', p.first + ' ' + p.last + ' \xB7 ' + p.locality));
+      row.append(button('Gast löschen', async () => {
+        if (await ctx.confirm('Gast löschen?', p.first + ' ' + p.last + ' aus der Auswahl entfernen? Vorbereitete Tischplätze werden frei; gespielte Ergebnisse bleiben erhalten.', 'Ja')) {
+          await guestRpc('delete', p.id);
+          await guests();
+        }
+      }, 'ghost'));
+      root.append(row);
+    }
+  }
+  async function copyLink(task, holder) {
+    const url = task;
+    try {
+      if (navigator.clipboard?.write && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(value => new Blob([value], { type: 'text/plain' })) })]);
+      } else
+        await navigator.clipboard.writeText(await url);
+      holder.textContent = 'Link in die Zwischenablage kopiert.';
+    } catch {
+      const value = await url;
+      holder.replaceChildren(el('p', 'small muted', 'Bitte diesen Link kopieren:'));
+      const input = el('input');
+      input.value = value;
+      input.readOnly = true;
+      input.setAttribute('aria-label', 'Tischeinladung');
+      holder.append(input);
+    }
+  }
+  async function tableHistory(table) {
+    editorOpen = true;
+    let d = $('hhTableHistoryDialog');
+    if (!d) {
+      d = el('dialog', 'hh-confirm-dialog tt-history-dialog');
+      d.id = 'hhTableHistoryDialog';
+      document.body.append(d);
+    }
+    const panel = el('div');
+    d.replaceChildren(el('h2', '', 'Tisch ' + table.table_no + ' \xB7 Runde ' + table.stage), panel, button('Schließen', () => d.close(), 'ghost'));
+    d.onclose = () => {
+      editorOpen = false;
+      d.replaceChildren();
+    };
+    d.showModal();
+    try {
+      await liveStats(panel, active.id, table.id, 'table');
+      const history = panel.querySelector('.hh-party-select')?.closest('.panel');
+      if (history)
+        panel.prepend(history);
+    } catch (e) {
+      d.close();
+      throw e;
+    }
+  }
+  async function captureInvite(table) {
+    const context = ctx;
+    let d = document.getElementById('hhTableCaptureDialog');
+    if (!d) {
+      d = el('dialog', 'hh-confirm-dialog tt-invite-dialog');
+      d.id = 'hhTableCaptureDialog';
+      document.body.append(d);
+    }
+    d.replaceChildren(el('h2', '', 'Erfassung \xB7 Tisch ' + table.table_no), el('p', 'small muted', 'Dieser QR-Code erlaubt nach Eingabe von Vorname, Nachname und Ortschaft das Eintragen und Zurücknehmen von Ergebnissen an diesem Tisch. Er gilt nur für diese Turnierrunde, längstens 24 Stunden. Nur an den vorgesehenen Erfasser weitergeben. Erneutes Erstellen ersetzt den bisherigen Erfassungscode und beendet seine Gastzugänge.'));
+    const create = button('Erfassungscode erstellen', async () => {
+      create.disabled = true;
+      try {
+        const r = await ctx.client.rpc('hh_table_capture_issue', { p_table: table.id });
+        if (r.error)
+          throw r.error;
+        if (ctx !== context || !d.open)
+          return;
+        const url = new URL('erfassen.html', location.href);
+        url.hash = new URLSearchParams({
+          tisch: r.data.table_id,
+          code: r.data.token
+        });
+        const qr = qrcode(0, 'M');
+        qr.addData(url.href, 'Byte');
+        qr.make();
+        const holder = el('div', 'tt-qr');
+        holder.innerHTML = qr.createSvgTag({
+          cellSize: 4,
+          margin: 16,
+          scalable: true,
+          title: 'QR-Code zur Tisch-Erfassung'
+        });
+        create.replaceWith(holder);
+      } catch (e) {
+        create.disabled = false;
+        ctx.fail(e);
+      }
+    }, 'primary');
+    d.append(create, button('Schließen', () => d.close(), 'ghost'));
+    d.onclose = () => d.replaceChildren();
+    d.showModal();
+  }
+  async function inviteDialog(table) {
+    const context = ctx;
+    let d = document.getElementById('hhTableInviteDialog');
+    if (!d) {
+      d = el('dialog', 'hh-confirm-dialog tt-invite-dialog');
+      d.id = 'hhTableInviteDialog';
+      document.body.append(d);
+    }
+    d.replaceChildren(el('h2', '', 'Tisch ' + table.table_no));
+    const status = el('div');
+    if (active.status === 'running') {
+      d.append(el('p', 'small muted', 'QR-Code scannen, um diesen Tisch-Spielstand mit vollständigen Spielernamen und Partieverlauf ohne Anmeldung anzusehen. Jeder mit diesem Link kann diese Angaben lesen. Der Code gilt bis zum Start der nächsten Turnierrunde oder bis zum Turnierende.'));
+      const result = await ctx.client.rpc('hh_table_score_qr', { p_table: table.id });
+      if (result.error)
+        throw result.error;
+      if (ctx !== context)
+        return;
+      const r = result.data, url = location.origin + location.pathname.replace(/[^/]*$/, '') + 'spielstand.html#' + new URLSearchParams({
+          tisch: r.table_id,
+          code: r.token
+        });
+      if (typeof qrcode !== 'function')
+        throw Error('Bitte die App neu laden, damit die QR-Code-Anzeige verfügbar ist.');
+      const qr = qrcode(0, 'M');
+      qr.addData(url, 'Byte');
+      qr.make();
+      const holder = el('div', 'tt-qr');
+      holder.innerHTML = qr.createSvgTag({
+        cellSize: 4,
+        margin: 16,
+        scalable: true,
+        title: 'QR-Code für den Spielstand von Tisch ' + table.table_no
+      });
+      d.append(holder, el('small', 'muted', 'Turnierrunde ' + r.stage + ' \xB7 Namen und Spielverlauf sichtbar'));
+    } else {
+      d.append(el('p', 'small muted', 'Die Spielstandsanzeige per QR-Code steht nach dem Turnierstart bereit. Vor dem Start kannst du einen zugeteilten Platz zur Registrierung einladen.'));
+      const guests = table.players.map(id => active.people.find(p => p.user_id === id)).filter(p => p?.guest);
+      if (guests.length) {
+        const choice = select('ttInviteGuest', guests.map(p => [
+          p.user_id,
+          p.username
+        ]));
+        d.append(choice, button('Zur Registrierung einladen', async () => {
+          const task = ctx.client.rpc('hh_tournament_invite', {
+            p_action: 'create',
+            p_table: table.id,
+            p_guest: choice.value
+          }).then(r => {
+            if (r.error)
+              throw r.error;
+            return location.origin + location.pathname + '#hh_table_invite=' + r.data.token;
+          });
+          await copyLink(task, status);
+        }, 'primary'));
+      }
+    }
+    const close = button('Schließen', () => d.close(), 'ghost');
+    close.onclick = () => d.close();
+    d.append(status, close);
+    d.onclose = () => d.replaceChildren();
+    d.showModal();
+    d.querySelector('h2').tabIndex = -1;
+    d.querySelector('h2').focus({ preventScroll: true });
+    d.scrollTop = 0;
+  }
+  function colorStatistics(source) {
+    const panel = el('section', 'panel');
+    panel.append(el('h3', '', 'Farbenstatistik'));
+    const table = el('table', 'tt-ranking'), head = el('thead'), tr = el('tr');
+    for (const title of [
+        'Farbe',
+        'Partien',
+        'Punkte'
+      ])
+      tr.append(el('th', '', title));
+    head.append(tr);
+    table.append(head);
+    const body = el('tbody');
+    for (const suit of [
+        'Eichel',
+        'Gras',
+        'Herz',
+        'Schellen'
+      ]) {
+      let count = 0, points = 0;
+      for (const t of source || [])
+        for (const g of t.games || []) {
+          const r = g.rounds?.[0] || g;
+          if (r.suit === suit) {
+            count++;
+            points += (g.scores || []).reduce((a, b) => a + b, 0);
+          }
+        }
+      const row = el('tr');
+      row.append(el('td', '', suit), el('td', '', String(count)), el('td', '', String(points)));
+      body.append(row);
+    }
+    table.append(body);
+    panel.append(table);
+    return panel;
+  }
+  async function liveStats(root, tournamentId, tableId, scope) {
+    const model = await rpc('detail', tournamentId);
+    active = model;
+    const table = model.tables.find(t => t.id === tableId);
+    const all = model.results;
+    const allowed = table?.players || [];
+    if (scope === 'table') {
+      model.results = table ? [{
+          players: table.players,
+          games: table.games
+        }] : [];
+    }
+    const rank = rankings();
+    model.results = all;
+    root.replaceChildren();
+    if (scope === 'participants')
+      root.append(rankingTable('Teilnehmer dieses Tisches', rank.players.filter(p => allowed.includes(p.id))));
+    else if (scope === 'table') {
+      root.append(rankingTable('Tischstatistik \xB7 Spieler', rank.players.filter(p => allowed.includes(p.id))));
+      if (model.settings.game !== 'Schafkopf')
+        root.append(rankingTable('Tischstatistik \xB7 Teams', rank.teams));
+    } else {
+      root.append(rankingTable('Statistik des laufenden Turniers', rank.players));
+      if (model.settings.game !== 'Schafkopf')
+        root.append(rankingTable('Team-Paare im Turnier', rank.teams));
+    }
+    if (model.settings.game === 'Schafkopf' && model.settings.capture_colors) {
+      const source = scope === 'table' ? table ? [table] : [] : model.results;
+      root.append(colorStatistics(source));
+    }
+    if (scope === 'table' && table && model.settings.game === 'Schafkopf') {
+      const panel = el('section', 'panel');
+      panel.append(el('h3', '', 'Bisherige Partien'));
+      const target = el('div');
+      window.HHSchafkopf.history(target, {
+        people: table.players.map(id => ({ name: model.people.find(p => p.user_id === id)?.full_name || 'Spieler' })),
+        schaf_games: table.games
+      });
+      panel.append(target);
+      root.append(panel);
+      return;
+    }
+    if (scope === 'table' && table && window.HHRoundDetails) {
+      const panel = el('section', 'panel');
+      panel.append(el('h3', '', 'Spielverlauf'));
+      const choice = select('ttHistoryParty', [
+        ...table.games.map((g, i) => [
+          String(i),
+          'Partie ' + (i + 1) + ' \xB7 ' + g.scores.join(' : ')
+        ]),
+        ...!table.done ? [[
+            'current',
+            'Aktuelle Partie'
+          ]] : []
+      ]);
+      choice.className = 'hh-party-select';
+      choice.setAttribute('aria-label', 'Partie für den Spielverlauf');
+      const target = el('div');
+      const draw = () => {
+        const rounds = choice.value === 'current' ? table.rounds : table.games[Number(choice.value)]?.rounds;
+        const labels = [
+          table.players.slice(0, 2),
+          table.players.slice(2)
+        ].map(ids => ids.map(id => model.people.find(p => p.user_id === id)?.full_name || 'Spieler').join(' / '));
+        target.innerHTML = window.HHRoundDetails.table(rounds || [], labels);
+      };
+      choice.onchange = draw;
+      choice.value = table.done ? String(table.games.length - 1) : 'current';
+      panel.append(choice, target);
+      draw();
+      root.append(panel);
+    }
+  }
+  async function refreshRooms(next, token) {
+    const result = await next.client.rpc('hh_tournament_lobby');
+    if (!ctx || ctx.user.id !== next.user.id || token !== requestGeneration)
+      return false;
+    if (result.error)
+      throw result.error;
+    const previous = lobbyRows;
+    lobbyRows = Array.isArray(result.data) ? next.display ? next.display(result.data) : result.data : [];
+    for (const row of lobbyRows.filter(t => t.status === 'finished' && t.participant && previous.some(p => p.id === t.id && p.status === 'running'))) {
+      if (editorOpen)
+        continue;
+      const saved = active, ownerContext = ctx;
+      try {
+        const model = await rpc('detail', row.id);
+        if (ctx !== ownerContext)
+          return false;
+        active = model;
+        awards(rankings());
+      } finally {
+        if (ctx === ownerContext)
+          active = saved;
+      }
+    }
+    return true;
+  }
+  function roomCards(root, {
+    archive: archived,
+    query,
+    scope
+  }) {
+    if (!ctx)
+      return 0;
+    const rows = lobbyRows.filter(t => (archived ? [
+      'finished',
+      'cancelled'
+    ].includes(t.status) : t.status === 'running') && t.title.toLocaleLowerCase('de').includes(query));
+    for (const t of rows) {
+      const card = button('', async () => {
+        if (t.status === 'running')
+          await ctx.openTable(t.table_id, t.id);
+        else {
+          archive = true;
+          ctx.setPage('tournaments');
+          await open(t.id);
+        }
+      }, 'hh-room-card tt-lobby-room' + (t.status === 'running' ? ' tt-live-room' : ''));
+      card.dataset.tournamentId = t.id;
+      const body = el('div', 'hh-room-copy');
+      body.append(el('strong', '', 'Turnier ' + t.title + (t.table_no ? ' \xB7 Tisch ' + t.table_no : '')), el('span', 'hh-room-variant', (t.settings.game || 'Bierkopf') + ' \xB7 Turnier \xB7 Runde ' + t.stage + ' / ' + t.settings.stages), el('span', 'hh-room-score', t.scores ? t.scores.join(' : ') : 'Turnierstatistik'), el('small', 'tt-status', t.status === 'finished' ? 'Offline \xB7 Beendet' : t.status === 'cancelled' ? 'Offline \xB7 Abgebrochen' : t.done ? 'Runde beendet \xB7 ' + t.completed + ' / ' + t.settings.target + ' Partien' : t.completed + ' / ' + t.settings.target + ' Partien abgeschlossen'));
+      const faces = el('div', 'hh-room-faces');
+      for (const p of t.people || [])
+        faces.append(face(p));
+      const logo = titleLogo(t.settings.logo);
+      if (logo)
+        body.querySelector('strong').prepend(logo);
+      else if (window.HHRoomIcons)
+        body.querySelector('strong').prepend(window.HHRoomIcons.create('tournament'));
+      card.append(faces, body, el('span', 'hh-room-arrow', '\u203A'));
+      root.append(archivedCard(card, t, async () => ctx.renderRoomCards?.()));
+    }
+    return rows.length;
+  }
+  window.HHTournament = {
+    interacting: () => archiveGestureActive,
+    resume: open,
+    liveStats,
+    roomCards,
+    async refresh(next) {
+      if (archiveGestureActive)
+        return;
+      if (!ctx || ctx.user.id !== next.user.id) {
+        ctx = next;
+        active = null;
+        tableId = null;
+        selectedPeople.clear();
+      } else
+        Object.assign(ctx, next);
+      const generation = ++requestGeneration;
+      const result = await ctx.client.rpc('hh_tournament_access');
+      if (result.error)
+        throw result.error;
+      if (generation !== requestGeneration || !ctx)
+        return;
+      const allowed = !!result.data;
+      if (!await refreshRooms(next, generation))
+        return;
+      next.renderRoomCards?.();
+      const nav = $('hhNavTournaments');
+      nav.classList.toggle('hide', !allowed);
+      $('hhLobbyNav').classList.toggle('tt-has-access', allowed);
+      nav.onclick = () => run(async () => {
+        if (ctx.ensureProfile && !await ctx.ensureProfile())
+          return;
+        ctx.setPage('tournaments');
+        if (!editorOpen)
+          await list();
+      });
+      if (!allowed) {
+        active = null;
+        content().replaceChildren();
+        if (!$('hhLobbyTournaments').classList.contains('hide'))
+          ctx.setPage('rooms');
+        return;
+      }
+      if (overviewOpen && !busy && !$('hhLobbyTournaments').classList.contains('hide')) {
+        await run(async () => {
+          active = await rpc('detail', active.id);
+          renderOverview();
+        });
+        return;
+      }
+      if (!busy && !editorOpen && !editingTable && !selected.length && !$('hhLobbyTournaments').classList.contains('hide') && !content().contains(document.activeElement?.closest('input,select'))) {
+        await run(active ? reload : list);
+      }
+    },
+    clear() {
+      archiveGestureActive = false;
       archiveReveal = null;
-      lobbyRows = lobbyRows.filter(row => row.id !== tournament.id);
-      await refresh();
-    })
-  });
-  return wrapper;
-}
-async function list(){overviewOpen=false;editorOpen=false;active=null;tableId=null;editingTable=null;selected=[];content().replaceChildren();const h=heading('Turnier');const b=button('+',()=>{content().replaceChildren(heading('Neues Turnier',list),settingsForm())});b.setAttribute('aria-label','Neues Turnier erstellen');if(ctx.admin)h.append(b);content().append(h);const tabs=el('div','hh-archive-tabs');for(const [value,label]of [[false,'Aktive Turniere'],[true,'Archiv']]){const b=button(label,()=>{archive=value;return list()});b.setAttribute('aria-pressed',String(value===archive));tabs.append(b)}content().append(tabs);const rows=(await rpc('list')).filter(t=>archive?['finished','cancelled'].includes(t.status):!['finished','cancelled'].includes(t.status));if(!rows.length)content().append(el('p','muted','Noch kein Turnier vorhanden.'));
-for(const t of rows){const card=button('',()=>open(t.id),'panel tt-list-card');card.append(el('strong','',t.title),el('span','small muted',settingsCopy(t.settings)),el('span','tt-status',t.status==='draft'?'Vorbereitet':t.status==='finished'?'Beendet':t.status==='cancelled'?'Abgebrochen':'Runde '+t.stage+' · '+t.done+'/'+t.tables+' Tische fertig'));content().append(archivedCard(card,t,list))}}
-async function open(id){overviewOpen=false;editorOpen=false;active=await rpc('detail',id);tableId=null;editingTable=null;selected=[];render();}
-function seatPoints(t){if(active.settings.game==='Schafkopf')return t.scores;const totals=[0,0];for(const g of t.games||[])for(let i=0;i<2;i++)totals[i]+=Number(g.scores[i])||0;if(!t.done)for(let i=0;i<2;i++)totals[i]+=Number(t.scores[i])||0;return [totals[0],totals[0],totals[1],totals[1]]}
-function playerStrip(t){const strip=el('div','tt-table-player-strip'),scores=seatPoints(t);for(let i=0;i<4;i++){const p=active.people.find(p=>p.user_id===t.players[i]);const full=p?.full_name||p?.username||'Freier Platz',first=p?.first_name||full.split(/\s+/)[0],last=p?.last_name||full.split(/\s+/).slice(1).join(' ');const cell=el('div','tt-table-player');cell.title=full;cell.append(el('small','tt-start-number',p?.start_no?'Nr. '+p.start_no:'–'));const avatar=face(p).firstElementChild;cell.append(avatar,el('strong','tt-table-player-name',displayName(p,Math.max(10,Math.floor((Math.min(innerWidth,700)-110)/28)))),el('small','tt-table-player-locality',p?.locality||''),el('strong','tt-table-player-points',String(scores[i]||0)));strip.append(cell)}return strip}
-function renderOverview(){const id=active.id,root=content();root.replaceChildren(heading('Tischübersicht',()=>open(id)),el('p','small muted',active.title+' · Runde '+active.stage));const grid=el('div','tt-overview-grid');for(const t of active.tables.filter(t=>t.stage===active.stage)){const points=seatPoints(t),card=button('',async()=>{await openTableWithNotice(t)},'panel tt-overview-card');card.setAttribute('aria-label','Tisch '+t.table_no+' öffnen');card.append(el('h3','','Tisch '+t.table_no),el('strong','tt-overview-total',String(points.reduce((a,b)=>a+b,0))),el('small','muted','Spielerpunkte insgesamt'),el('p','tt-overview-seats',points.join(' – ')),el('p','tt-status'+(!t.done&&active.status==='running'?' tt-running':''),t.done?'Runde beendet':active.status==='running'?'Spielt noch':'Beendet'));grid.append(card)}root.append(grid)}
-async function tableOverview(){editorOpen=true;overviewOpen=true;active=await rpc('detail',active.id);renderOverview()}
-function tableCard(t){const participant=t.players.includes(ctx.user.id),canPlay=active.status==='running'&&(participant||active.admin)&&t.stage===active.stage;const card=el('div','panel tt-list-card tt-tournament-table');card.append(el('strong','','Tisch '+t.table_no+' · Runde '+t.stage),playerStrip(t),el('span','tt-status'+(active.status==='running'&&!t.done&&t.stage===active.stage?' tt-running':''),active.status==='cancelled'?'Turnier abgebrochen':active.status==='finished'?'Turnier beendet · '+t.games.length+' Partien':t.done?'Runde beendet · '+t.games.length+' / '+active.settings.target+' Partien':active.status==='draft'?'Bereit':t.stage===active.stage?'Partie läuft':'Abgeschlossen'));if(active.admin&&(active.status==='draft'||active.status==='running'&&t.stage===active.stage))card.append(button(active.status==='draft'?'Tischeinladung':'Spielstand-QR-Code',()=>inviteDialog(t),'ghost'));if(active.admin&&active.status==='running'&&t.stage===active.stage&&!t.done)card.append(button('Erfassung per QR-Code',()=>captureInvite(t),'ghost'));if(canPlay&&!t.done){card.append(button('Tisch öffnen',()=>openTableWithNotice(t),'primary hh-wide-button'))}else if(active.status==='running'&&!active.admin&&!participant)card.append(el('small','muted','Zugriff nur für die zugeteilten Spieler'));if(active.admin&&active.status==='draft')card.append(button('Teams bearbeiten',()=>{editingTable=t.id;selected=t.players.filter(Boolean);tableId=null;render()},'ghost'));if((active.admin||participant)&&(t.games.length||t.rounds?.length))card.append(button('Bisherige Partien und Runden',()=>tableHistory(t),'ghost hh-wide-button tt-history-button'));const controls=[...card.children].filter(n=>n.tagName==='BUTTON');if(controls.length){const actions=el('div','tt-table-actions');actions.append(...controls);card.append(actions)}if(!t.done)return card;const disclosure=el('details','panel tt-completed-table');disclosure.open=tableExpanded.has(t.id);const summary=el('summary','tt-completed-summary');summary.append(el('strong','','Tisch '+t.table_no+' · Runde '+t.stage+' beendet'));const result=el('div','tt-completed-results');result.append(playerStrip(t));summary.append(result,el('small','muted','Details anzeigen'));disclosure.append(summary,card);disclosure.ontoggle=()=>{if(disclosure.open)tableExpanded.add(t.id);else tableExpanded.delete(t.id)};return disclosure}
-
-function schafRankings(){const rows=active.people.map(p=>({id:p.user_id,ids:[p.user_id],games:0,wins:0,points:0,against:0}));const byId=new Map(rows.map(r=>[r.id,r]));for(const t of active.results||[])for(const g of t.games||[])t.players.forEach((id,i)=>{const r=byId.get(id);if(r){r.games++;r.points+=Number(g.scores[i])||0;r.wins+=Number((g.winners||[]).includes(i))}});rows.sort((a,b)=>b.wins-a.wins||b.points-a.points);rows.forEach((r,i)=>r.rank=i&&rows[i-1].wins===r.wins&&rows[i-1].points===r.points?rows[i-1].rank:i+1);return {players:rows,teams:[]}}
-function rankings(){if(active.settings.game==='Schafkopf')return schafRankings();const ps=new Map(active.people.map(p=>[p.user_id,{id:p.user_id,ids:[p.user_id],games:0,wins:0,points:0,against:0}])),teams=new Map();for(const t of active.results||[])for(const g of t.games||[])for(let side=0;side<2;side++){const ids=t.players.slice(side*2,side*2+2),key=[...ids].sort().join('|');if(!teams.has(key))teams.set(key,{id:key,ids,games:0,wins:0,points:0,against:0});for(const x of [teams.get(key),...ids.map(id=>ps.get(id))]){if(!x)continue;x.games++;x.wins+=Number(g.winner===side);x.points+=Number(g.scores[side]);x.against+=Number(g.scores[1-side])}}
-const compare=(a,b)=>b.wins-a.wins||b.points-a.points;const rank=rows=>{rows.sort(compare);let previous;for(let i=0;i<rows.length;i++){rows[i].rank=previous&&compare(previous,rows[i])===0?previous.rank:i+1;previous=rows[i]}return rows};return{players:rank([...ps.values()]),teams:rank([...teams.values()])}}
-function rankingTable(title,rows){const panel=el('div','panel');panel.append(el('h3','',title));const wrap=el('div','tt-table-wrap'),table=el('table','tt-ranking'),head=el('thead'),tr=el('tr');for(const text of ['Platz','Spieler / Team','Partien','Siege','Differenz','Punkte'])tr.append(el('th','',text));head.append(tr);table.append(head);const body=el('tbody');for(const x of rows){const row=el('tr',x.rank<=3?'tt-podium tt-place-'+x.rank:'');row.append(el('td','',String(x.rank)));const names=el('td');names.append(x.ids.length===2?teamPeople(x.ids):people(x.ids));row.append(names,el('td','',String(x.games)),el('td','',String(x.wins)),el('td','',String(x.points-x.against)),el('td','',String(x.points)));body.append(row)}table.append(body);wrap.append(table);panel.append(wrap);if(!rows.length)panel.append(el('p','small muted','Noch keine abgeschlossenen Partien.'));return panel}
-function awards(rank,force=false){if(active.status!=='finished')return;const key='hh_tournament_awards:'+ctx.user.id+':'+active.id;if(!force&&localStorage.getItem(key))return;localStorage.setItem(key,'seen');const dialog=$('hhTournamentAwards');dialog.replaceChildren(el('h2','','Turnier beendet'));for(const place of [...new Set(rank.players.filter(x=>x.rank<=3).map(x=>x.rank))]){const row=el('div','tt-award');row.append(el('strong','',place+'. Platz'),people(rank.players.filter(x=>x.rank===place).flatMap(x=>x.ids)));dialog.append(row)}const minimum=Math.min(...rank.players.map(x=>x.points));if(rank.players.length){dialog.append(el('h3','','Nüsskarter · wenigste Punkte'));const row=el('div','tt-award');row.append(people(rank.players.filter(x=>x.points===minimum).flatMap(x=>x.ids)),el('small','muted',minimum+' Punkte'));dialog.append(row)}if(rank.teams.length){dialog.append(el('h3','','Bestes Team'));for(const x of rank.teams.filter(x=>x.rank===1))dialog.append(teamPeople(x.ids))}dialog.append(button('Ergebnisse ansehen',()=>dialog.close(),'primary'));dialog.showModal();dialog.querySelector('h2').tabIndex=-1;dialog.querySelector('h2').focus({preventScroll:true});dialog.scrollTop=0}
-async function loadDirectory(){directory=await rpc('directory',null,{search:$('ttDirectorySearch')?.value||''});renderDirectory()}
-function renderDirectory(){const box=$('ttDirectory');if(!box)return;box.replaceChildren();const assigned=new Set(active.tables.filter(t=>t.id!==editingTable).flatMap(t=>t.players));for(const p of directory.filter(p=>!assigned.has(p.user_id))){const b=button('',()=>{if(selected.includes(p.user_id))selected=selected.filter(id=>id!==p.user_id);else if(selected.length<4)selected.push(p.user_id);renderDirectory()});b.className='tt-player-choice';b.setAttribute('aria-pressed',String(selected.includes(p.user_id)));b.append(face(p));if(p.locality)b.append(el('small','tt-player-locality',p.locality));box.append(b)}const roster=$('ttSelected');roster.replaceChildren();const individual=active.settings.game==='Schafkopf';roster.classList.toggle('tt-selected-seats',individual);for(let side=0;side<(individual?4:2);side++){const row=el('div','tt-selected-team');row.append(el('strong','',individual?'Platz '+(side+1):'Team '+(side===0?'A':'B')));for(const id of individual?selected.slice(side,side+1):selected.slice(side*2,side*2+2)){const p=directory.find(p=>p.user_id===id)||active.people.find(p=>p.user_id===id)||selectedPeople.get(id);if(p)row.append(face(p))}roster.append(row)}for(const p of directory)selectedPeople.set(p.user_id,p);$('ttAddTable').disabled=selected.length!==4}
-const selectedPeople=new Map();
-function tableSetup(){const panel=el('div','panel');panel.append(el('h3','',editingTable?(active.settings.game==='Schafkopf'?'Sitzplätze bearbeiten':'Teams bearbeiten'):'Tisch hinzufügen'),el('p','small muted',active.settings.game==='Schafkopf'?'Wähle vier Spieler in der Reihenfolge Platz 1 bis 4. Bei Kreuzspiel spielen Platz 1 + 3 und 2 + 4 zusammen.':'Wähle zuerst zwei Spieler für Team A und danach zwei für Team B. Jeder Spieler kann zunächst nur einem Tisch zugeordnet werden.'));const input=el('input');input.id='ttDirectorySearch';input.type='search';input.placeholder='Name suchen';input.setAttribute('aria-label','Turnierspieler suchen');input.oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>run(loadDirectory),250)};const choices=el('div','tt-directory');choices.id='ttDirectory';const chosen=el('div','tt-selected');chosen.id='ttSelected';const add=button(editingTable?'Teams speichern':'Tisch mit vier Spielern hinzufügen',async()=>{await rpc(editingTable?'replace_table':'table',active.id,{players:selected,table_id:editingTable});selected=[];editingTable=null;await reload();await loadDirectory()},'primary');add.id='ttAddTable';add.disabled=true;panel.append(input,chosen,choices,add);return panel}
-async function reload(){const old=active.stage;active=await rpc('detail',active.id);if(old!==active.stage)tableId=null;render()}
-function render(){const root=content();const previousHistory=$('ttPreviousRounds');if(previousHistory)historyExpanded=previousHistory.open;root.replaceChildren(heading(active.title,list));if(active.admin&&active.status==='draft')root.append(button('Turniereinstellungen bearbeiten',()=>{root.replaceChildren(heading('Turniereinstellungen',()=>open(active.id)),settingsForm(active))},'ghost hh-wide-button'));else root.append(el('p','small muted',settingsCopy(active.settings)));if(active.admin&&active.status==='draft')root.append(button('Turniergäste verwalten',guests,'ghost hh-wide-button'));if(active.status==='running')root.append(button('Tischübersicht',tableOverview,'ghost hh-wide-button'));root.append(el('p','small muted','Runde '+active.stage+' / '+active.settings.stages+' · '+(active.status==='finished'?'Turnier beendet':active.status==='cancelled'?'Turnier abgebrochen':active.status==='draft'?'Vorbereitung':'Turnier läuft')));
-
-if(active.admin&&active.status==='draft'){root.append(tableSetup(),button('Turnier starten',async()=>{if(await ctx.confirm('Turnier starten?','Spiel, Partien je Runde und Anzahl Runden werden für dieses Turnier festgelegt.')){await rpc('start',active.id);await reload()}},'primary hh-wide-button'));queueMicrotask(()=>loadDirectory().catch(e=>ctx?.fail(e)))}
-if(active.status==='finished')root.append(button('Siegerehrung anzeigen',()=>awards(rankings(),true),'ghost hh-wide-button'));const current=active.tables.filter(t=>t.stage===active.stage);if(active.status==='running'){const progress=el('div','panel tt-progress');progress.append(el('h3','','Runde '+active.stage+' · '+current.filter(t=>t.done).length+' / '+current.length+' Tische fertig'));progress.append(el('p','small muted',active.ready?'Alle Tische haben die vorgegebenen Partien beendet.':'Die nächste Runde kann starten, sobald alle Tische fertig sind.'));if(active.admin&&active.ready){const final=active.stage>=active.settings.stages;progress.append(button(final?'Turnier beenden':'Nächste Runde auslosen und starten',async()=>{if(await ctx.confirm(final?'Turnier beenden?':'Nächste Runde starten?',final?'Ergebnisse abschließen und das Turnier ins Archiv verschieben?':'Alle Teams und Tische werden für die nächste Runde neu ausgelost.')){await rpc(final?'finish':'next_stage',active.id);await reload()}},'primary hh-wide-button'))}root.append(progress)}
-if(active.admin&&['draft','running'].includes(active.status))root.append(button('Turnier abbrechen',async()=>{if(await ctx.confirm('Turnier abbrechen?','Das Turnier wird beendet und als abgebrochen archiviert. Bereits abgeschlossene Partien bleiben in der Statistik. Eine laufende Partie wird nicht gewertet.')){await rpc('cancel',active.id);await reload()}},'ghost tt-cancel'));
-for(const t of active.tables.filter(t=>t.stage===active.stage))root.append(tableCard(t));if(!active.admin&&!active.tables.some(t=>t.stage===active.stage))root.append(el('p','muted','Du bist für diese Runde noch keinem Tisch zugeteilt.'));
-const old=active.tables.filter(t=>t.stage!==active.stage);if(old.length){const details=el('details','panel');details.id='ttPreviousRounds';details.open=historyExpanded;details.append(el('summary','','Bisherige Runden'));for(const t of old)details.append(tableCard(t));root.append(details)}const rank=rankings();root.append(rankingTable('Gesamtranking aller Spieler',rank.players));if(active.settings.game==='Schafkopf'&&active.settings.capture_colors)root.append(colorStatistics(active.results));if(active.settings.game!=='Schafkopf')root.append(rankingTable('Team-Paare im Turnier',rank.teams));awards(rank)}
-async function guestRpc(action,id=null,body={}){const result=await ctx.client.rpc('hh_tournament_guest',{p_action:action,p_id:id,p_body:body});if(result.error)throw result.error;return result.data}
-async function guests(){editorOpen=true;const root=content();const tournamentId=active.id;root.replaceChildren(heading('Turniergäste',()=>open(tournamentId)));const form=el('form','panel tt-settings');form.append(el('h3','','Gast hinzufügen'));const inputs={};for(const [id,label,max] of [['first','Vorname',60],['last','Nachname',60],['locality','Ort',100]]){const input=el('input');input.id='ttGuest'+id;input.required=true;input.maxLength=max;field(form,label,input);inputs[id]=input}form.append(el('p','small muted','Gäste haben kein Benutzerkonto. Name und Ort können nach dem Anlegen nicht umbenannt werden. Bitte die Person über die Erfassung informieren.'));const add=el('button','primary','Gast anlegen');add.type='submit';form.append(add);form.onsubmit=e=>{e.preventDefault();run(async()=>{await guestRpc('create',null,Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value.trim()])));await guests()})};root.append(form);const items=await guestRpc('list');for(const p of items){const row=el('div','panel hh-social-row');row.append(el('span','',p.first+' '+p.last+' · '+p.locality));row.append(button('Gast löschen',async()=>{if(await ctx.confirm('Gast löschen?',p.first+' '+p.last+' aus der Auswahl entfernen? Vorbereitete Tischplätze werden frei; gespielte Ergebnisse bleiben erhalten.','Ja')){await guestRpc('delete',p.id);await guests()}},'ghost'));root.append(row)}}
-async function copyLink(task,holder){const url=task;try{if(navigator.clipboard?.write&&window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'text/plain':url.then(value=>new Blob([value],{type:'text/plain'}))})])}else await navigator.clipboard.writeText(await url);holder.textContent='Link in die Zwischenablage kopiert.'}catch{const value=await url;holder.replaceChildren(el('p','small muted','Bitte diesen Link kopieren:'));const input=el('input');input.value=value;input.readOnly=true;input.setAttribute('aria-label','Tischeinladung');holder.append(input)}}
-
-
-async function tableHistory(table){editorOpen=true;let d=$('hhTableHistoryDialog');if(!d){d=el('dialog','hh-confirm-dialog tt-history-dialog');d.id='hhTableHistoryDialog';document.body.append(d)}const panel=el('div');d.replaceChildren(el('h2','','Tisch '+table.table_no+' · Runde '+table.stage),panel,button('Schließen',()=>d.close(),'ghost'));d.onclose=()=>{editorOpen=false;d.replaceChildren()};d.showModal();try{await liveStats(panel,active.id,table.id,'table');const history=panel.querySelector('.hh-party-select')?.closest('.panel');if(history)panel.prepend(history)}catch(e){d.close();throw e}}
-async function captureInvite(table){const context=ctx;let d=document.getElementById('hhTableCaptureDialog');if(!d){d=el('dialog','hh-confirm-dialog tt-invite-dialog');d.id='hhTableCaptureDialog';document.body.append(d)}d.replaceChildren(el('h2','','Erfassung · Tisch '+table.table_no),el('p','small muted','Dieser QR-Code erlaubt nach Eingabe von Vorname, Nachname und Ortschaft das Eintragen und Zurücknehmen von Ergebnissen an diesem Tisch. Er gilt nur für diese Turnierrunde, längstens 24 Stunden. Nur an den vorgesehenen Erfasser weitergeben. Erneutes Erstellen ersetzt den bisherigen Erfassungscode und beendet seine Gastzugänge.'));const create=button('Erfassungscode erstellen',async()=>{create.disabled=true;try{const r=await ctx.client.rpc('hh_table_capture_issue',{p_table:table.id});if(r.error)throw r.error;if(ctx!==context||!d.open)return;const url=new URL('erfassen.html',location.href);url.hash=new URLSearchParams({tisch:r.data.table_id,code:r.data.token});const qr=qrcode(0,'M');qr.addData(url.href,'Byte');qr.make();const holder=el('div','tt-qr');holder.innerHTML=qr.createSvgTag({cellSize:4,margin:16,scalable:true,title:'QR-Code zur Tisch-Erfassung'});create.replaceWith(holder)}catch(e){create.disabled=false;ctx.fail(e)}},'primary');d.append(create,button('Schließen',()=>d.close(),'ghost'));d.onclose=()=>d.replaceChildren();d.showModal()}
-async function inviteDialog(table){const context=ctx;let d=document.getElementById('hhTableInviteDialog');if(!d){d=el('dialog','hh-confirm-dialog tt-invite-dialog');d.id='hhTableInviteDialog';document.body.append(d)}d.replaceChildren(el('h2','','Tisch '+table.table_no));const status=el('div');if(active.status==='running'){d.append(el('p','small muted','QR-Code scannen, um diesen Tisch-Spielstand mit vollständigen Spielernamen und Partieverlauf ohne Anmeldung anzusehen. Jeder mit diesem Link kann diese Angaben lesen. Der Code gilt bis zum Start der nächsten Turnierrunde oder bis zum Turnierende.'));const result=await ctx.client.rpc('hh_table_score_qr',{p_table:table.id});if(result.error)throw result.error;if(ctx!==context)return;const r=result.data,url=location.origin+location.pathname.replace(/[^/]*$/,'')+'spielstand.html#'+new URLSearchParams({tisch:r.table_id,code:r.token});if(typeof qrcode!=='function')throw Error('Bitte die App neu laden, damit die QR-Code-Anzeige verfügbar ist.');const qr=qrcode(0,'M');qr.addData(url,'Byte');qr.make();const holder=el('div','tt-qr');holder.innerHTML=qr.createSvgTag({cellSize:4,margin:16,scalable:true,title:'QR-Code für den Spielstand von Tisch '+table.table_no});d.append(holder,el('small','muted','Turnierrunde '+r.stage+' · Namen und Spielverlauf sichtbar'));}else{d.append(el('p','small muted','Die Spielstandsanzeige per QR-Code steht nach dem Turnierstart bereit. Vor dem Start kannst du einen zugeteilten Platz zur Registrierung einladen.'));const guests=table.players.map(id=>active.people.find(p=>p.user_id===id)).filter(p=>p?.guest);if(guests.length){const choice=select('ttInviteGuest',guests.map(p=>[p.user_id,p.username]));d.append(choice,button('Zur Registrierung einladen',async()=>{const task=ctx.client.rpc('hh_tournament_invite',{p_action:'create',p_table:table.id,p_guest:choice.value}).then(r=>{if(r.error)throw r.error;return location.origin+location.pathname+'#hh_table_invite='+r.data.token});await copyLink(task,status)},'primary'))}}const close=button('Schließen',()=>d.close(),'ghost');close.onclick=()=>d.close();d.append(status,close);d.onclose=()=>d.replaceChildren();d.showModal();d.querySelector('h2').tabIndex=-1;d.querySelector('h2').focus({preventScroll:true});d.scrollTop=0}
-function colorStatistics(source){const panel=el('section','panel');panel.append(el('h3','','Farbenstatistik'));const table=el('table','tt-ranking'),head=el('thead'),tr=el('tr');for(const title of ['Farbe','Partien','Punkte'])tr.append(el('th','',title));head.append(tr);table.append(head);const body=el('tbody');for(const suit of ['Eichel','Gras','Herz','Schellen']){let count=0,points=0;for(const t of source||[])for(const g of t.games||[]){const r=g.rounds?.[0]||g;if(r.suit===suit){count++;points+=(g.scores||[]).reduce((a,b)=>a+b,0)}}const row=el('tr');row.append(el('td','',suit),el('td','',String(count)),el('td','',String(points)));body.append(row)}table.append(body);panel.append(table);return panel}
-async function liveStats(root,tournamentId,tableId,scope){const model=await rpc('detail',tournamentId);active=model;const table=model.tables.find(t=>t.id===tableId);const all=model.results;const allowed=table?.players||[];if(scope==='table'){model.results=table?[{players:table.players,games:table.games}]:[]}const rank=rankings();model.results=all;root.replaceChildren();if(scope==='participants')root.append(rankingTable('Teilnehmer dieses Tisches',rank.players.filter(p=>allowed.includes(p.id))));else if(scope==='table'){root.append(rankingTable('Tischstatistik · Spieler',rank.players.filter(p=>allowed.includes(p.id))));if(model.settings.game!=='Schafkopf')root.append(rankingTable('Tischstatistik · Teams',rank.teams))}else{root.append(rankingTable('Statistik des laufenden Turniers',rank.players));if(model.settings.game!=='Schafkopf')root.append(rankingTable('Team-Paare im Turnier',rank.teams))}if(model.settings.game==='Schafkopf'&&model.settings.capture_colors){const source=scope==='table'?(table?[table]:[]):model.results;root.append(colorStatistics(source))}if(scope==='table'&&table&&model.settings.game==='Schafkopf'){const panel=el('section','panel');panel.append(el('h3','','Bisherige Partien'));const target=el('div');window.HHSchafkopf.history(target,{people:table.players.map(id=>({name:model.people.find(p=>p.user_id===id)?.full_name||'Spieler'})),schaf_games:table.games});panel.append(target);root.append(panel);return}if(scope==='table'&&table&&window.HHRoundDetails){const panel=el('section','panel');panel.append(el('h3','','Spielverlauf'));const choice=select('ttHistoryParty',[...table.games.map((g,i)=>[String(i),'Partie '+(i+1)+' · '+g.scores.join(' : ')]),...(!table.done?[['current','Aktuelle Partie']]:[])]);choice.className='hh-party-select';choice.setAttribute('aria-label','Partie für den Spielverlauf');const target=el('div');const draw=()=>{const rounds=choice.value==='current'?table.rounds:table.games[Number(choice.value)]?.rounds;const labels=[table.players.slice(0,2),table.players.slice(2)].map(ids=>ids.map(id=>model.people.find(p=>p.user_id===id)?.full_name||'Spieler').join(' / '));target.innerHTML=window.HHRoundDetails.table(rounds||[],labels)};choice.onchange=draw;choice.value=table.done?String(table.games.length-1):'current';panel.append(choice,target);draw();root.append(panel)}}
-async function refreshRooms(next,token){const result=await next.client.rpc('hh_tournament_lobby');if(!ctx||ctx.user.id!==next.user.id||token!==requestGeneration)return false;if(result.error)throw result.error;const previous=lobbyRows;lobbyRows=Array.isArray(result.data)?(next.display?next.display(result.data):result.data):[];for(const row of lobbyRows.filter(t=>t.status==='finished'&&t.participant&&previous.some(p=>p.id===t.id&&p.status==='running'))){if(editorOpen)continue;const saved=active,ownerContext=ctx;try{const model=await rpc('detail',row.id);if(ctx!==ownerContext)return false;active=model;awards(rankings())}finally{if(ctx===ownerContext)active=saved}}return true}
-function roomCards(root,{archive:archived,query,scope}){if(!ctx)return 0;const rows=lobbyRows.filter(t=>(archived?['finished','cancelled'].includes(t.status):t.status==='running')&&t.title.toLocaleLowerCase('de').includes(query));for(const t of rows){const card=button('',async()=>{if(t.status==='running')await ctx.openTable(t.table_id,t.id);else{archive=true;ctx.setPage('tournaments');await open(t.id)}},'hh-room-card tt-lobby-room'+(t.status==='running'?' tt-live-room':''));card.dataset.tournamentId=t.id;const body=el('div','hh-room-copy');body.append(el('strong','','Turnier '+t.title+(t.table_no?' · Tisch '+t.table_no:'')),el('span','hh-room-variant',(t.settings.game||'Bierkopf')+' · Turnier · Runde '+t.stage+' / '+t.settings.stages),el('span','hh-room-score',t.scores?t.scores.join(' : '):'Turnierstatistik'),el('small','tt-status',t.status==='finished'?'Offline · Beendet':t.status==='cancelled'?'Offline · Abgebrochen':t.done?'Runde beendet · '+t.completed+' / '+t.settings.target+' Partien':t.completed+' / '+t.settings.target+' Partien abgeschlossen'));const faces=el('div','hh-room-faces');for(const p of t.people||[])faces.append(face(p));if(window.HHRoomIcons)body.querySelector('strong').prepend(window.HHRoomIcons.create('tournament'));card.append(faces,body,el('span','hh-room-arrow','›'));root.append(archivedCard(card,t,async()=>ctx.renderRoomCards?.()))}return rows.length}
-window.HHTournament={interacting:()=>archiveGestureActive,resume:open,liveStats,roomCards,async refresh(next){if(archiveGestureActive)return;if(!ctx||ctx.user.id!==next.user.id){ctx=next;active=null;tableId=null;selectedPeople.clear()}else Object.assign(ctx,next);const generation=++requestGeneration;const result=await ctx.client.rpc('hh_tournament_access');if(result.error)throw result.error;if(generation!==requestGeneration||!ctx)return;const allowed=!!result.data;if(!await refreshRooms(next,generation))return;next.renderRoomCards?.();const nav=$('hhNavTournaments');nav.classList.toggle('hide',!allowed);$('hhLobbyNav').classList.toggle('tt-has-access',allowed);nav.onclick=()=>run(async()=>{if(ctx.ensureProfile&&!await ctx.ensureProfile())return;ctx.setPage('tournaments');if(!editorOpen)await list()});if(!allowed){active=null;content().replaceChildren();if(!$('hhLobbyTournaments').classList.contains('hide'))ctx.setPage('rooms');return}if(overviewOpen&&!busy&&!$('hhLobbyTournaments').classList.contains('hide')){await run(async()=>{active=await rpc('detail',active.id);renderOverview()});return}if(!busy&&!editorOpen&&!editingTable&&!selected.length&&!$('hhLobbyTournaments').classList.contains('hide')&&!content().contains(document.activeElement?.closest('input,select'))){await run(active?reload:list)}},clear(){archiveGestureActive=false;archiveReveal=null;overviewOpen=false;requestGeneration++;ctx=null;lobbyRows=[];archive=false;editorOpen=false;settingsExpanded=false;historyExpanded=false;active=null;editingTable=null;directory=[];selected=[];selectedPeople.clear();clearTimeout(searchTimer);$('hhNavTournaments').classList.add('hide');$('hhLobbyTournaments').classList.add('hide');content().replaceChildren();const d=$('hhTournamentAwards');if(d.open)d.close();d.replaceChildren();for(const id of ['hhTableHistoryDialog','hhTableCaptureDialog']){const node=$(id);if(node?.open)node.close();node?.replaceChildren()}const invite=$('hhTableInviteDialog');if(invite?.open)invite.close()}};
+      overviewOpen = false;
+      requestGeneration++;
+      ctx = null;
+      lobbyRows = [];
+      archive = false;
+      editorOpen = false;
+      settingsExpanded = false;
+      historyExpanded = false;
+      active = null;
+      editingTable = null;
+      directory = [];
+      selected = [];
+      selectedPeople.clear();
+      clearTimeout(searchTimer);
+      $('hhNavTournaments').classList.add('hide');
+      $('hhLobbyTournaments').classList.add('hide');
+      content().replaceChildren();
+      const d = $('hhTournamentAwards');
+      if (d.open)
+        d.close();
+      d.replaceChildren();
+      for (const id of [
+          'hhTableHistoryDialog',
+          'hhTableCaptureDialog'
+        ]) {
+        const node = $(id);
+        if (node?.open)
+          node.close();
+        node?.replaceChildren();
+      }
+      const invite = $('hhTableInviteDialog');
+      if (invite?.open)
+        invite.close();
+    }
+  };
 })();
