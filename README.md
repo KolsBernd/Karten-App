@@ -1,9 +1,11 @@
-# Kartabend 34
+# Kartabend 35
 
 https://kolsbernd.github.io/Karten-App/
 
-Tischstart steht unter den Punkten. Bei Sau und Kreuzspiel müssen zwei Gewinner grün markiert werden; Kreuzspiel bleibt bei den festen Paaren 1+3 oder 2+4. Ergebnis, Ausgang und die separate Tout-Kategorie sind rot markiert. Ein Tout wird vor dem Speichern bestätigt und erzeugt nach erfolgreicher Eintragung eine interne Mitteilung mit Spieler, Tisch und Spiel an den Turnierersteller. Rücknahme entfernt die zugehörige Mitteilung; kein neuer Handy-Push.
+Turniere verwenden Klarnamen, mit abgekürztem Vornamen bei wenig Platz. Tischübersicht öffnet den berechtigten Tisch direkt. Die Platz-Beschriftung ist entfernt. Eigene kompakte SVG-Kartensymbole orientieren sich an den Eichel-Motiven der bereitgestellten Vorlage.
 
-Tische zeigen vier Spieler nebeneinander mit Startnummer, Logo, abgekürztem Namen, Punkten und – nur für den Ersteller – Ortschaft. Laufende Turniere bieten statt Gästeverwaltung eine zentrierte Tischübersicht mit Spielerpunktsumme, vier Platzständen und Status.
+Vor Start eines Schafkopf-Turniers kann Farben erfassen aktiviert werden. Dann wird je Ergebnis eine der vier Farben verpflichtend gewählt, serverseitig geprüft und gespeichert. Tisch-/Turnierstatistik und Verlauf zeigen die Farbe; die Wertung ändert sich dadurch nicht. Auch QR-Erfasser verwenden dieselbe Vorgabe. Zuschauerfreigaben bleiben erforderlich, Ortschaften bleiben auf den Turnierersteller beschränkt.
 
-Migration 35-turnieransichten-und-tout.sql baut auf Version 33 auf. Sie ersetzt Funktionen und ergänzt die Mitteilungsstruktur; sie setzt keine Daten zurück. Handbuch und Datenschutz aktualisiert. Tests und Grenzen siehe Pruefung-Version34.md.
+Migration 36-turnierfarben-und-klarnamen.sql baut auf Version 34 auf und setzt keine Daten zurück. Der ausdrücklich gewünschte einmalige vollständige Neustart wird separat über die bestehende gesicherte Verwaltungsfunktion ausgeführt. Registrierte Konten, Profile und bestätigte Freundschaften bleiben erhalten. Kein Reset wird beim Laden oder Hochladen dieser Dateien ausgelöst.
+
+Handbuch und Datenschutz aktualisiert. Prüfungen und Grenzen: Pruefung-Version35.md.

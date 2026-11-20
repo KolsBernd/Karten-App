@@ -1,0 +1,8 @@
+# Kartabend 35 · Prüfung
+20. November 2026
+
+- Gesamte isolierte Datenbank-Regressionssuite bis Version 34 plus Migration 36 zweimal erfolgreich. Ungültige Einstellungswerte, fehlende und ungültige Farbe abgewiesen. Gültige Farbe gespeichert, Punkte unverändert. Eigene Profile, Berechtigungen, private Ortschaften und Zuschauerfreigaben erhalten. Gast-Erfassungsmodell enthält die Vorgabe; öffentliche Projektion enthält nur die gespeicherte Farbe. Rücknahme geprüft.
+- DOM-Tests: Namensanzeige, Eichel-/Karten-SVGs, Farbauswahl nur bei Aktivierung und gesperrtes Speichern ohne Farbe; Tischübersicht ohne Platzbeschriftung, direkter Aufruf des Tisches, weiterhin geschützter Zugriff. Bisherige Authentifizierungs-/Spielsuite erfolgreich. JavaScript-Syntax und Offline-Cache geprüft.
+- Nutzerhandbuch HTML/PDF Version 35 sowie Datenschutz HTML/PDF aktualisiert und gerendert. Betroffene neue Abläufe sind textlich beschrieben. Die bestehende Sperre der Live-App-/lokalen Browser-Vorschau wurde nicht umgangen; daher keine neue visuelle Browser-/iPad-Abnahme und keine fingierten Bildschirmaufnahmen. Neue Kartensymbole sind eigene SVG-Zeichnungen anhand der Vorlage, keine unveränderten Ausschnitte des Kartenbogens.
+- Installation selbst löscht keine Spielstände. Der vom Betreiber verlangte vollständige Neustart benötigt eine separate Bestätigung am Löschschritt. Dabei werden Konten, Profile und bestätigte Freundschaften innerhalb derselben Transaktion auf unveränderten Inhalt geprüft; sonst wird abgebrochen. Der tatsächliche Ausführungsstatus wird im lokalen Veröffentlichungsnachweis dokumentiert.
+- Kein unabhängiges Sicherheitsgutachten und keine Garantie vollständiger Fehlerfreiheit.
