@@ -1,11 +1,11 @@
-# Kartabend 35
+# Kartabend 36
 
 https://kolsbernd.github.io/Karten-App/
 
-Turniere verwenden Klarnamen, mit abgekürztem Vornamen bei wenig Platz. Tischübersicht öffnet den berechtigten Tisch direkt. Die Platz-Beschriftung ist entfernt. Eigene kompakte SVG-Kartensymbole orientieren sich an den Eichel-Motiven der bereitgestellten Vorlage.
+Alle Funktionen der Version 35 bleiben enthalten: Klarnamen, eigene SVG-Kartenmotive nach Vorlage, optionale Schafkopf-Farberfassung und direkte Tischübersicht. Die Farbenstatistik erhält auch in der reduzierten Turnier-Gesamtansicht die gespeicherte Farbe.
 
-Vor Start eines Schafkopf-Turniers kann Farben erfassen aktiviert werden. Dann wird je Ergebnis eine der vier Farben verpflichtend gewählt, serverseitig geprüft und gespeichert. Tisch-/Turnierstatistik und Verlauf zeigen die Farbe; die Wertung ändert sich dadurch nicht. Auch QR-Erfasser verwenden dieselbe Vorgabe. Zuschauerfreigaben bleiben erforderlich, Ortschaften bleiben auf den Turnierersteller beschränkt.
+Turniererstellungsrechte werden serverseitig anhand der Konto-ID freigeschaltet. Ersteller verwalten nur eigene Turniere, Gäste und Einladungen; fremde aktive Turniere bleiben ohne Zuteilung geschützt. Die globale App-Verwaltung bleibt ausschließlich beim bisher freigegebenen Verwaltungskonto. Die Oberfläche verwendet die vom Server bestätigten Rechte.
 
-Migration 36-turnierfarben-und-klarnamen.sql baut auf Version 34 auf und setzt keine Daten zurück. Der ausdrücklich gewünschte einmalige vollständige Neustart wird separat über die bestehende gesicherte Verwaltungsfunktion ausgeführt. Registrierte Konten, Profile und bestätigte Freundschaften bleiben erhalten. Kein Reset wird beim Laden oder Hochladen dieser Dateien ausgelöst.
+Migration 37-turnierersteller-und-pruefung.sql baut auf Version 35 auf. Sie bereitet die getrennten Turnierrechte vor, schaltet aber kein zusätzliches Konto frei und setzt keine Daten zurück. Eine Kontofreischaltung erfolgt getrennt im Projekt durch den Betreiber. Handbuch und Datenschutz sind aktualisiert.
 
-Handbuch und Datenschutz aktualisiert. Prüfungen und Grenzen: Pruefung-Version35.md.
+Beide globalen Rücksetz-Buttons wurden im UI einschließlich zweier Bestätigungen und korrektem globalen Geltungsbereich geprüft; die zugehörigen Funktionen wurden mit befüllten Testdaten ausgeführt. Der ausdrücklich bestätigte einmalige produktive App-Neustart wurde erfolgreich durchgeführt: Konten, Profile und bestätigte Freundschaften unverändert; Räume, Turniere, Gäste und Statistiken leer. Kein Reset beim Laden oder Hochladen dieses Pakets.
