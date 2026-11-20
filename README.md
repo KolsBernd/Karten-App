@@ -1,9 +1,9 @@
-# Kartabend 33
+# Kartabend 34
 
 https://kolsbernd.github.io/Karten-App/
 
-Verwaltungsreset mit expliziten SQL-Bedingungen; Gesamtstatistik und alle persönlichen Statistiken einbezogen. Keine Rücksetzung bei Installation. Turniere: volle Auswahlleiste, Gästeverwaltung nur im Turnier, direkter Einstellungsbutton, Ortschaft unter Spielernamen, aufklappbare abgeschlossene Tische und QR/Verlauf nebeneinander.
+Tischstart steht unter den Punkten. Bei Sau und Kreuzspiel müssen zwei Gewinner grün markiert werden; Kreuzspiel bleibt bei den festen Paaren 1+3 oder 2+4. Ergebnis, Ausgang und die separate Tout-Kategorie sind rot markiert. Ein Tout wird vor dem Speichern bestätigt und erzeugt nach erfolgreicher Eintragung eine interne Mitteilung mit Spieler, Tisch und Spiel an den Turnierersteller. Rücknahme entfernt die zugehörige Mitteilung; kein neuer Handy-Push.
 
-Bierkopf-Vorgabe 3 Partien / 3 Runden. Schafkopf-Vorgabe 30 / 2, Einzelpunkte je Sitzplatz. King, Solo, Wenz, Geier, Sau, Kreuzspiel und Tout; kein Ramsch. Nur Pluspunkte. Sau: beide Gewinner ausdrücklich markieren. Kreuzspiel: Plätze 1+3 gegen 2+4. Serverseitige Wertung und Autorprüfung; Zuschauer- und Erfassungs-QR bleiben getrennt.
+Tische zeigen vier Spieler nebeneinander mit Startnummer, Logo, abgekürztem Namen, Punkten und – nur für den Ersteller – Ortschaft. Laufende Turniere bieten statt Gästeverwaltung eine zentrierte Tischübersicht mit Spielerpunktsumme, vier Platzständen und Status.
 
-Migrationen 33-verwaltung-und-turnierkomfort.sql und 34-schafkopf-turniere.sql in dieser Reihenfolge vor der neuen Oberfläche installieren. Keine echten Daten werden durch die Installation zurückgesetzt. Handbuch und Datenschutz aktualisiert. Grenzen der Prüfung siehe Pruefung-Version33.md.
+Migration 35-turnieransichten-und-tout.sql baut auf Version 33 auf. Sie ersetzt Funktionen und ergänzt die Mitteilungsstruktur; sie setzt keine Daten zurück. Handbuch und Datenschutz aktualisiert. Tests und Grenzen siehe Pruefung-Version34.md.

@@ -2,3 +2,5 @@
 #winners button{white-space:pre-line;font-size:13px;line-height:1.35}#bases button{font-size:13px}
 
 :root{--panel:#fff;--soft:#f1eff3;--muted:#6a6570;--text:#242126}.hh-schafkopf-table #schafCaptureDock{position:sticky;top:0;z-index:3;background:white}.tt-schaf-dock-players{margin-top:12px}#hhTournamentSchafView .hh-wide-button{display:block;width:100%;margin-top:12px}
+
+#score{display:flex;flex-direction:column}#score>.teams{order:0}#score>#meta{order:1;margin-top:12px}
