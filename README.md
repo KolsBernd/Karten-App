@@ -1,11 +1,17 @@
-# Kartabend 36
+# Kartabend 37
 
 https://kolsbernd.github.io/Karten-App/
 
-Alle Funktionen der Version 35 bleiben enthalten: Klarnamen, eigene SVG-Kartenmotive nach Vorlage, optionale Schafkopf-Farberfassung und direkte Tischübersicht. Die Farbenstatistik erhält auch in der reduzierten Turnier-Gesamtansicht die gespeicherte Farbe.
+## Änderungen
 
-Turniererstellungsrechte werden serverseitig anhand der Konto-ID freigeschaltet. Ersteller verwalten nur eigene Turniere, Gäste und Einladungen; fremde aktive Turniere bleiben ohne Zuteilung geschützt. Die globale App-Verwaltung bleibt ausschließlich beim bisher freigegebenen Verwaltungskonto. Die Oberfläche verwendet die vom Server bestätigten Rechte.
+- Turnierersteller können eigene archivierte Turniere nach links wischen und nach Ja/Nein-Bestätigung löschen. Aktive und fremde Turniere sind serverseitig gesperrt. Persönliche Ergebnisse registrierter Teilnehmer bleiben erhalten, Gaststatistiken und Verläufe verschwinden mit den Tischen.
+- Profilpunkte sind tatsächlich erzielte Punkte, auch bei Niederlagen. 12:21 ergibt 12 Punkte und −9 Nettopunkte. Nettopunkte nur für Bierkopf/Schleifer. Tabelle und Kennzahlen enthalten eine Gesamtsumme sowie registrierte Turnierergebnisse einschließlich Schafkopf. Allgemeine Ranglisten bleiben beim Verschieben gelöschter Turnierergebnisse in den Ergebnisnachweis stabil.
+- Raumsymbole entsprechen der Navigation: Pokal, Spielkarten, Fragezeichen. Nachrichten-Swipe unterstützt mobile Zeigergesten; ein Swipe öffnet keine Karte versehentlich.
+- Einheitliche Aktionshöhen in vergleichbaren Gruppen, gleich breite Tisch-/Verlaufsbuttons. Rücknahme heißt Letzte Partie zurücknehmen und verlangt stets Ja/Nein, auch im QR-Erfassungszugang. Fehlende Tischberechtigung wird als Popup erklärt.
+- Anfrage-Umwandlung wechselt in aktive Räume und schließt den Erstellmodus. Umgewandelte Anfragen erscheinen nicht zusätzlich im Archiv; + aus dem Archiv wechselt zuerst zur aktiven Ansicht.
 
-Migration 37-turnierersteller-und-pruefung.sql baut auf Version 35 auf. Sie bereitet die getrennten Turnierrechte vor, schaltet aber kein zusätzliches Konto frei und setzt keine Daten zurück. Eine Kontofreischaltung erfolgt getrennt im Projekt durch den Betreiber. Handbuch und Datenschutz sind aktualisiert.
+## Aufbau der geänderten Abläufe
 
-Beide globalen Rücksetz-Buttons wurden im UI einschließlich zweier Bestätigungen und korrektem globalen Geltungsbereich geprüft; die zugehörigen Funktionen wurden mit befüllten Testdaten ausgeführt. Der ausdrücklich bestätigte einmalige produktive App-Neustart wurde erfolgreich durchgeführt: Konten, Profile und bestätigte Freundschaften unverändert; Räume, Turniere, Gäste und Statistiken leer. Kein Reset beim Laden oder Hochladen dieses Pakets.
+ui37.js kapselt barrierearme Dialoge und lokale Navigationssymbole. chat-gestures.js trennt Wischen von Klicks und vertikalem Scrollen. tournament.js bündelt Tischzugriff und bestätigte Archivaktionen. Die serverseitige Ergebnisprojektion berechnet Werte mengenbasiert mit einem einzigen Aggregat statt wiederholtem Kopieren wachsender JSON-Arrays. Mutation, Rechteprüfung und Erhalt registrierter Ergebnisse erfolgen atomar in der Datenbank. Normale interne round-/stage-Bezeichner bleiben stabil; geändert wurden die sichtbaren Buttontexte.
+
+Migration 38-archiv-und-profilpunkte.sql baut auf Version 36 auf. Die Installation aktualisiert Funktionen und Ergebnisfelder, führt keine echte Archivlöschung und keinen Reset aus. Handbuch und Datenschutz aktualisiert. Umfang und Grenzen: Pruefung-Version37.md.

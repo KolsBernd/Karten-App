@@ -1,0 +1,23 @@
+/* One touch-target size per comparable action group, without clipping long labels. */
+:root{--action-height:52px}
+.hh-dialog-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hh-dialog-actions>button:only-child{grid-column:1/-1}
+.hh-action-dialog button,.hh-confirm-dialog .row>button{min-height:var(--action-height)}
+#play .row:has(>.hh-score-submit),.sn-actions,.kl-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch;grid-auto-rows:minmax(var(--action-height),auto)}
+#play .row:has(>.hh-score-submit)>button,.sn-actions>button,.kl-actions>button,.tt-schaf-scoring>.hh-wide-button,#entry>button,.tt-table-actions>button{min-height:var(--action-height);margin:0!important;padding:8px 12px;font-size:15px;line-height:1.15;white-space:normal;align-self:stretch;width:100%;height:100%}
+.tt-table-actions{grid-auto-rows:minmax(var(--action-height),auto)}
+.tt-table-actions>.tt-history-button{grid-column:1/-1}
+.tt-archive-swipe{overflow:hidden;border-radius:20px;position:relative;margin:12px 0;touch-action:pan-y}
+.tt-archive-swipe>.tt-list-card,.tt-archive-swipe>.hh-room-card{margin:0;position:relative;z-index:1}
+.tt-archive-swipe:has(>.ev-swipe-delete:focus-visible)>.ev-swipe-delete{transform:translateX(0)}
+.tt-archive-swipe:has(>.ev-swipe-delete:focus-visible)>.tt-list-card{transform:translateX(-80px)}
+.hh-room-kind{display:inline-block;width:22px;height:22px;vertical-align:-4px;margin-right:7px;color:var(--accent,#AA0B24);flex:none}
+.hh-profile-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.hh-stat-table tfoot{font-weight:750;border-top:2px solid var(--line);background:var(--soft)}
+@media(max-width:380px){.sn-actions,.kl-actions,#play .row:has(>.hh-score-submit){grid-template-columns:1fr}.tt-table-actions>button{padding:10px 6px}}
+
+#scoring>.hh-score-submit,#scoring>button[onclick*="undo"]{min-height:var(--action-height);padding:8px 12px;font-size:15px;line-height:1.15;width:100%;box-sizing:border-box}
+/* The archived card itself is a button, so it needs its own revealed-state rule. */
+.tt-archive-swipe>.ev-swipe-delete{display:block;top:0;bottom:0;right:0;transform:none;width:72px;min-height:var(--action-height)!important;height:100%;font-size:13px!important;border-radius:0 20px 20px 0!important}
+.tt-archive-swipe.ev-swipe-open>.tt-list-card,.tt-archive-swipe.ev-swipe-open>.hh-room-card,.tt-archive-swipe:has(>.ev-swipe-delete:focus-visible)>.tt-list-card,.tt-archive-swipe:has(>.ev-swipe-delete:focus-visible)>.hh-room-card{transform:translateX(-80px)!important}
+main button,.hh-auth-panel form button,.hh-auth-panel .hh-wide-button,.hh-profile-links button{min-height:var(--action-height)}
