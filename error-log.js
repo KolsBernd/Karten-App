@@ -4,7 +4,7 @@
  */
 (() => {
   'use strict';
-  const KEY = 'hh_error_queue_v1', TTL = 7 * 86400000, BUILD = '38.0';
+  const KEY = 'hh_error_queue_v1', TTL = 7 * 86400000, BUILD = '39.0';
   const CODES = new Set([
     'NETWORK',
     'JS_TYPE',
