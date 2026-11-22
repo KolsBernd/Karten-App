@@ -1,9 +1,9 @@
 {
   "name": "kartabend-regression-tests",
   "private": true,
-  "version": "39.0.0",
+  "version": "40.0.0",
   "scripts": {
-    "test": "cd .. && node tests/app-regression.cjs && node tests/tournament-regression.cjs && node tests/requests-regression.cjs && node tests/schafkopf-regression.cjs && node tests/capture-regression.cjs && node tests/cache-regression.cjs && node tests/diagnostics-regression.cjs && node tests/schniffel-settlement-regression.cjs"
+    "test": "cd .. && node tests/app-regression.cjs && node tests/tournament-regression.cjs && node tests/requests-regression.cjs && node tests/schafkopf-regression.cjs && node tests/capture-regression.cjs && node tests/cache-regression.cjs && node tests/diagnostics-regression.cjs && node tests/schniffel-settlement-regression.cjs && node tests/room-games-regression.cjs && node tests/tv-regression.cjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0",

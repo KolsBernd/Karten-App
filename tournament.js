@@ -544,7 +544,7 @@
       card.append(button(active.status === 'draft' ? 'Tischeinladung' : 'Spielstand-QR-Code', () => inviteDialog(t), 'ghost'));
     if (active.admin && active.status === 'running' && t.stage === active.stage && !t.done)
       card.append(button('Erfassung per QR-Code', () => captureInvite(t), 'ghost'));
-    if (canPlay && !t.done) {
+    if (canPlay) {
       card.append(button('Tisch öffnen', () => openTableWithNotice(t), 'primary hh-wide-button'));
     } else if (active.status === 'running' && !active.admin && !participant)
       card.append(el('small', 'muted', 'Zugriff nur für die zugeteilten Spieler'));

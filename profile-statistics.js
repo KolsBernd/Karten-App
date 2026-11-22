@@ -28,13 +28,14 @@
               type: 'Klopfer',
               kl
             });
+        for(const extra of session.extraHistory||[])if(extra.closed)rows.push({type:extra.gameType,extra});
       }
       return rows;
     }
     function roomPlayerStats(r, since = null) {
       const stats = new Map();
       const people = r.payload?.people || [];
-      for (const record of recordsForRoom(r).filter(record => !since || new Date(record.game?.date || record.sheet?.date || record.kl?.date || 0) > new Date(since))) {
+      for (const record of recordsForRoom(r).filter(record => !since || new Date(record.game?.date || record.sheet?.date || record.kl?.date || record.extra?.date || 0) > new Date(since))) {
         let results = [];
         if (record.game) {
           const game = record.game;
@@ -46,6 +47,7 @@
                 points: Number(game.scores?.[side] || 0),
                 netPoints: Number(game.scores?.[side] || 0) - Number(game.scores?.[1 - side] || 0)
               });
+        } else if(record.extra){results=window.HHRoomGames.statistics(record.extra);
         } else {
           const scores = record.sheet ? c.snResults(record.sheet).scores : c.klTotals(record.kl);
           const maximum = scores.length ? Math.max(...scores.map(x => x.points)) : null;
