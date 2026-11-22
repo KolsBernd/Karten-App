@@ -1,0 +1,19 @@
+/* One outcome-selection colour across room games and tournament scoring.
+ * Player/roster choices deliberately keep their separate green portrait border. */
+#scoring button.active,
+.extra-suits button[aria-pressed=true],
+.extra-numbers button[aria-pressed=true],
+.kl-number-buttons button[aria-pressed=true],
+.kl-verdict-buttons button[aria-pressed=true],
+.kw-options button[aria-pressed=true],
+.tt-schaf-choices>button[aria-pressed=true],
+.tt-schaf-games button[aria-pressed=true],
+.tt-schaf-result button[aria-pressed=true],
+.tt-schaf-bonuses button[aria-pressed=true],
+.tt-schaf-tout button[aria-pressed=true],
+.tt-schaf-colors button[aria-pressed=true],
+#snTable button.sn-selected,
+.sn-settlement-rates button[aria-pressed=true]{background:#AA0B24!important;border-color:#AA0B24!important;color:#fff!important;box-shadow:none!important}
+
+/* Winning-player choices belong to the result, unlike the roster itself. */
+.tt-schaf-choices>button[aria-pressed=true] .tt-schaf-avatar{border-color:#AA0B24!important}

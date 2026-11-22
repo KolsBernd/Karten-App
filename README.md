@@ -1,4 +1,4 @@
-# Kartabend 43
+# Kartabend 44
 
 https://kolsbernd.github.io/Karten-App/
 
@@ -6,6 +6,8 @@ https://kolsbernd.github.io/Karten-App/
 
 Krawallo verwendet Teams aus dem Spielermenü und eine kompakte Erfassung mit den Schniffelkopf-Logos für Solo, King, Geier, Wenz und Flatterer. Keine neue Farberfassung. Ansage optional; Geschossen als Ohne/Kontra/Re/Sub ×1/×2/×4/×8; Durch statt Schwarz im Ergebnis. Grundspiel 4/5/6, Schneider angesagt 6/7, Schwarz angesagt 8, Tout 12; Aufsteher gewinnt sofort mit 31 Punkten ohne zusätzlichen Schuss.
 
-Migration 45 ergänzt die serverseitigen Regeln und versioniert neue Einträge. Bestehende Verläufe behalten ihre Wertung. Handbuch 43 und Datenschutz sind aktualisiert. Tests und Grenzen: Pruefung-Version43.md und tests/README.md.
+Migration 45 ergänzt die serverseitigen Regeln und versioniert neue Einträge. Bestehende Verläufe behalten ihre Wertung. Handbuch 44 und Datenschutz sind aktualisiert. Tests und Grenzen: Pruefung-Version44.md und tests/README.md.
 
 Google Cast bleibt bis zur Betreiberregistrierung vorbereitet, aber deaktiviert; CAST-EINRICHTUNG.md beschreibt die spätere Einrichtung. AirPlay für eine eigenständige TV-Ausgabe benötigt einen gesonderten nativen Ausbau.
+
+Version 44 vereinheitlicht ausgewählte Ergebnisbuttons: rote Füllung #AA0B24 mit weißer Schrift statt grünem Rahmen. Die grüne Profilmarkierung bleibt der Spielerauswahl vorbehalten.

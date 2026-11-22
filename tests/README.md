@@ -15,3 +15,5 @@ Version 41 ergänzt Krawallo-Regeln, Teamwertung und Eingabe sowie vorbereitete 
 Version 42 prüft den tatsächlichen Krawallo-Button im vollständigen App-DOM: eigene Teams, aktive Spielwahl, Punkte speichern. Ein vor der Korrektur fehlschlagender Test schützt den Einstieg. Zusätzlich werden die beiden Kreuztabellen über die Spielbuttons geöffnet und ihre Kopfzellen auf zentrierte Profil-Wrapper geprüft. JSDOM bleibt eine DOM-/CSS-Prüfung, keine visuelle Geräteabnahme.
 
 Version 43 ergänzt ausdrückliche Ja/Nein-Stichsummenprüfungen für 21 rückwärts und Klopfer, eindeutige grüne Stichzahlbuttons, neue kompakte Krawallo-Erfassung einschließlich Flatterer sowie Teamauswahl im Spielermenü. Alte Ablaufprüfungen bestätigen nur die neue Stichsummenwarnung automatisch; gesonderte Tests deaktivieren diese Hilfe und prüfen Nein/Ja ausdrücklich. Serverregression und Versionsformate: Pruefung-Version43.md.
+
+Version 44 stellt Ergebnisbuttons auf rote Füllung um. Die bestehende Auswahlprüfung kontrolliert roten Rand und Hintergrund, weiterhin genau eine Stichzahl, Standard 0 und die unveränderte Punkteberechnung.
