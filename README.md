@@ -1,13 +1,11 @@
-# Kartabend 42
+# Kartabend 43
 
 https://kolsbernd.github.io/Karten-App/
 
-Krawallo ergänzt die Raumspiele: vier Spieler, zwei feste Teams, Grundspiel 4, Tout 12, Sieg ab 31 beziehungsweise durch Aufsteher. Eigene Punktevorschau und serverseitige Regelprüfung, Rücknahme und Statistiken einschließlich Nettopunkten. Regeln: https://krawallo.weebly.com/regeln.html.
+21 rückwärts prüft insgesamt fünf Stiche der aktiven Spieler. Klopfer prüft 11 minus Spielerzahl. Abweichungen können nach einer ausdrücklichen Ja/Nein-Warnung gespeichert werden; der Eintrag enthält dann ein Kontrollmerkmal. Klopfer markiert genau eine Stichzahl grün, Standard 0. Richtig gibt 5 plus Stichzahl, Falsch 0.
 
-Bei 21 rückwärts markieren grüne Ränder Farbe und Stichzahl. Ausgesetzte Spieler erhalten keine Änderung. Teilen sitzt rechts oben.
+Krawallo verwendet Teams aus dem Spielermenü und eine kompakte Erfassung mit den Schniffelkopf-Logos für Solo, King, Geier, Wenz und Flatterer. Keine neue Farberfassung. Ansage optional; Geschossen als Ohne/Kontra/Re/Sub ×1/×2/×4/×8; Durch statt Schwarz im Ergebnis. Grundspiel 4/5/6, Schneider angesagt 6/7, Schwarz angesagt 8, Tout 12; Aufsteher gewinnt sofort mit 31 Punkten ohne zusätzlichen Schuss.
 
-Google Cast ist vorbereitet, aber noch nicht aktiviert: registrierte öffentliche Receiver-App-ID in config.js erforderlich. Ohne diese lädt kein Google-SDK und der Button weist auf die fehlende Einrichtung hin. Empfängeradresse für die Registrierung: https://kolsbernd.github.io/Karten-App/cast-receiver.html. Anleitung: CAST-EINRICHTUNG.md. Jeder Mitspieler benötigt kein eigenes Cast-Entwicklerkonto. AirPlay für eine eigenständige HTML-Anzeige erfordert einen gesonderten nativen Ausbau und ist nicht als Gerätepicker in dieser Web-App umgesetzt.
+Migration 45 ergänzt die serverseitigen Regeln und versioniert neue Einträge. Bestehende Verläufe behalten ihre Wertung. Handbuch 43 und Datenschutz sind aktualisiert. Tests und Grenzen: Pruefung-Version43.md und tests/README.md.
 
-Migration 44 erweitert die vorhandenen Raumregeln und Statistiken, ohne Spielstände zu löschen. Handbuch und Datenschutz sind aktualisiert. Prüfumfang und Grenzen: Pruefung-Version42.md. Die bestehende Sicherheitsprüfung Version 40 bleibt ein historischer Bericht.
-
-Version 42 korrigiert den tatsächlichen Krawallo-Einstieg: eigener Renderer statt Weiterleitung an Schafkopf, vollständige Spielbutton-Kennung und gemeinsamer Handler. Beide Kreuztabellen richten Profilbilder und Namen mittig aus. Neue Integrationstests klicken die tatsächlichen Spielbuttons und prüfen Punkteerfassung sowie Kopfzellen.
+Google Cast bleibt bis zur Betreiberregistrierung vorbereitet, aber deaktiviert; CAST-EINRICHTUNG.md beschreibt die spätere Einrichtung. AirPlay für eine eigenständige TV-Ausgabe benötigt einen gesonderten nativen Ausbau.

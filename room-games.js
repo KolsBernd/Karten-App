@@ -55,6 +55,8 @@
       throw Error('Mindestens ein Spieler muss mitspielen.');
     return {
       suit,
+      entry_format: 'tricks-v2',
+      trick_sum_confirmed: false,
       results,
       date: new Date().toISOString()
     };
@@ -78,6 +80,7 @@
     }));
   }
   function create(c) {
+    let entryBusy = false;
     let draftKey = '', suit = 'Eichel', choices = new Map(), busy = false, schafMounted = false, settingsDraft = null, settingsKey = '';
     const krawallo = window.HHKrawallo.create({...c,requireWrite,finish,newGame,undo,history});
     const root = el('section', 'hide');
@@ -300,16 +303,24 @@
           row.append(name, nums, exclude);
           panel.append(row);
         }
-        panel.append(button('Partie eintragen', () => {
+        panel.append(button('Partie eintragen', async () => {
+          if (entryBusy) return;
           requireWrite();
-          if (st.players.length < 2)
-            throw Error('Mindestens zwei Spieler auswählen.');
-          const round = backwardRound(st.players, st.rounds, suit, choices);
-          st.rounds.push(round);
-          if (round.results.some(p => p.points <= 0))
-            finish(st);
-          else
-            c.save();
+          if (st.players.length < 2) throw Error('Mindestens zwei Spieler auswählen.');
+          entryBusy = true;
+          try {
+            const round = backwardRound(st.players, st.rounds, suit, choices);
+            const count = st.rounds.length;
+            const sum = round.results.filter(p => !p.excluded).reduce((n,p) => n+p.tricks,0);
+            if (sum !== 5) {
+              if (!await c.confirm('Stichsumme prüfen', 'Es sind '+sum+' statt 5 Stiche eingetragen. Möchtest du die Punkte trotzdem speichern?')) return;
+              round.trick_sum_confirmed = true;
+            }
+            requireWrite();
+            if (c.type() !== '21 rückwärts' || sheet() !== st || st.rounds.length !== count || st.closed) throw Error('Spielstand geändert. Bitte erneut erfassen.');
+            st.rounds.push(round);
+            if (round.results.some(p => p.points <= 0)) finish(st); else c.save();
+          } finally { entryBusy = false; }
         }, 'primary hh-wide-button'));
       }
       const back = button('Letzte Partie zurücknehmen', undo, 'ghost hh-wide-button');
@@ -475,7 +486,9 @@
     }
     function render() {
       renderArchive();
-      const kind = c.type(), active = TYPES.includes(kind) && !window.HHPlayTournament?.active(), playing = active && document.getElementById('tabPlay').classList.contains('active');
+      const kind = c.type();
+      krawallo.renderTeams(kind === 'Krawallo' ? sheet() : null);
+      const active = TYPES.includes(kind) && !window.HHPlayTournament?.active(), playing = active && document.getElementById('tabPlay').classList.contains('active');
       root.classList.toggle('hide', !playing);
       if (schafMounted && (!playing || kind !== 'Schafkopf')) {
         window.HHSchafkopf.clear();
