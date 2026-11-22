@@ -79,7 +79,8 @@
             points: 0,
             netPoints: [
               'Bierkopf',
-              'Schleifer'
+              'Schleifer',
+              'Krawallo'
             ].includes(record.type) ? 0 : null
           };
           g.games++;
@@ -164,7 +165,8 @@
           points: 0,
           netPoints: [
             'Bierkopf',
-            'Schleifer'
+            'Schleifer',
+            'Krawallo'
           ].includes(type) ? 0 : null
         }
       ]));
@@ -246,7 +248,7 @@
           netPoints: 0
         });
       const cells = g => '<td>' + g.games + '</td><td>' + g.wins + '</td><td>' + (g.games ? Math.round(100 * g.wins / g.games) + ' %' : '\u2013') + '</td><td>' + g.points + (g.pointsIncomplete ? ' + ?' : '') + '</td><td>' + (g.netPoints === null ? '\u2013' : g.netPoints + (g.netIncomplete ? ' + ?' : '')) + '</td>';
-      return '<div class="hh-table-scroll"><table class="hh-stat-table"><thead><tr><th>Spielart</th><th>Partien</th><th>Siege</th><th>Quote</th><th>Punkte</th><th>Nettopunkte</th></tr></thead><tbody>' + types.map(type => '<tr><th scope="row">' + c.esc(type) + '</th>' + cells(byGame[type]) + '</tr>').join('') + '</tbody><tfoot><tr><th scope="row">Gesamt</th>' + cells(total) + '</tr></tfoot></table></div><p class="small muted">Punkte zählen auch bei Niederlagen. Nettopunkte gelten nur für Bierkopf und Schleifer: eigene Punkte minus Gegnerpunkte.</p>';
+      return '<div class="hh-table-scroll"><table class="hh-stat-table"><thead><tr><th>Spielart</th><th>Partien</th><th>Siege</th><th>Quote</th><th>Punkte</th><th>Nettopunkte</th></tr></thead><tbody>' + types.map(type => '<tr><th scope="row">' + c.esc(type) + '</th>' + cells(byGame[type]) + '</tr>').join('') + '</tbody><tfoot><tr><th scope="row">Gesamt</th>' + cells(total) + '</tr></tfoot></table></div><p class="small muted">Punkte zählen auch bei Niederlagen. Nettopunkte gelten nur für Bierkopf, Schleifer und Krawallo: eigene Punkte minus Gegnerpunkte.</p>';
     }
     function renderProfileMetrics(byGame, ownPlayed, ownWins) {
       const selected = c.$('hhProfileGame').value;

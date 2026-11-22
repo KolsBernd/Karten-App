@@ -1,0 +1,8 @@
+/* Selection uses the same green outline as selected player portraits. */
+.extra-suits button[aria-pressed=true],.extra-numbers button[aria-pressed=true]{border:3px solid #65C98D!important;color:var(--text)!important;background:var(--panel,var(--bg))!important;box-shadow:none!important}
+.kw-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.kw-roster{min-width:0;display:flex;flex-wrap:wrap;gap:8px}.kw-roster h3{width:100%}.kw-options{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.kw-options button{flex:1 1 100px;min-height:48px;min-width:0;margin:0!important}.kw-options button[aria-pressed=true]{border:2px solid #AA0B24;color:var(--accent);background:var(--soft)}.kw-faces{display:flex;justify-content:center;gap:12px;width:100%}.kw-faces>div{display:flex;flex-direction:column;align-items:center;min-width:0;flex:1}.kw-faces span{overflow-wrap:anywhere;max-width:100%}.kw-preview,.kw-final-score{display:block;text-align:center;font-size:clamp(22px,4vw,32px);font-weight:700}.kw-team{min-width:0!important}.kw-team .player-avatar{width:clamp(40px,6vw,64px);height:clamp(40px,6vw,64px)}
+/* Keep sharing at the top right, away from the room title and score rows. */
+.club-header:has(.hh-result-share),.tt-schaf-heading:has(.hh-result-share){position:relative;padding-right:80px!important;min-height:48px}
+.club-header .hh-result-share,.tt-schaf-heading .hh-result-share{position:absolute!important;right:0;top:0;margin:0!important;align-self:flex-start}
+.kw-roster .extra-player-choice[aria-pressed=true] .hh-selection-face{border:3px solid #65C98D}
+@media(max-width:420px){.kw-teams{gap:8px}.kw-roster .extra-player-choice{max-width:90px}.kw-faces{gap:5px}.kw-faces span{font-size:12px}}

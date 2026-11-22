@@ -4,7 +4,8 @@
   'use strict';
   const TYPES = [
       '21 rückwärts',
-      'Schafkopf'
+      'Schafkopf',
+      'Krawallo'
     ], SUITS = [
       'Eichel',
       'Gras',
@@ -59,6 +60,7 @@
     };
   }
   function statistics(record) {
+    if (record.gameType === 'Krawallo') return window.HHKrawallo.statistics(record);
     if (record.gameType === '21 rückwärts') {
       const scores = backwards(record.players, record.rounds), best = Math.min(...scores.map(p => p.points));
       return scores.map(p => ({
@@ -77,6 +79,7 @@
   }
   function create(c) {
     let draftKey = '', suit = 'Eichel', choices = new Map(), busy = false, schafMounted = false, settingsDraft = null, settingsKey = '';
+    const krawallo = window.HHKrawallo.create({...c,requireWrite,finish,newGame,undo,history});
     const root = el('section', 'hide');
     root.id = 'hhExtraGame';
     document.getElementById('play').before(root);
@@ -100,7 +103,7 @@
       a.extraGames ??= {};
       return a.extraGames[kind] ??= {
         id: Date.now(),
-        players: c.people().filter(p => !p.deleted).slice(0, kind === 'Schafkopf' ? 4 : 8).map(p => p.id),
+        players: c.people().filter(p => !p.deleted).slice(0, ['Schafkopf','Krawallo'].includes(kind) ? 4 : 8).map(p => p.id),
         rounds: [],
         closed: false,
         settings: structuredClone(a.schafSettings || defaultSettings())
@@ -509,6 +512,7 @@
       canSwitch,
       clear() {
         draftKey = '';
+        krawallo.clear();
         choices.clear();
         document.getElementById('hhBackwardResult')?.close();
       }

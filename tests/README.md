@@ -9,3 +9,5 @@ Die separate lokale Datenbankregression wurde zusätzlich mit PGlite über die g
 Version 39 ergänzt den automatischen Schniffelkopf-Abschluss, Centberechnung und Gleichstandsverteilung sowie Turnierlogo/Fallback am Tisch.
 
 Version 40 ergänzt direkte Schniffelkopf-Tabelleneingabe, Klopfer-Auswahl für 4–8 Spieler, 21 rückwärts, normales Schafkopf, Navigation außerhalb der Scrollansichten und getrennte TV-Freigabe/Widerruf. Die Tests prüfen Abläufe, Regeln und DOM, keine Pixelproportionen oder TV-Hardware. Serverregression und Live-Katalogprüfung sind in Pruefung-Version40.md dokumentiert.
+
+Version 41 ergänzt Krawallo-Regeln, Teamwertung und Eingabe sowie vorbereitete Cast-Konfiguration, SDK-Aufruf, Geräteauswahl und minimalen Zuschauerzugang zum Empfänger. Die Cast-Prüfung verwendet Simulationen, kein echtes TV-Gerät. Datenbankregression einschließlich Krawallo, Profil-Nettopunkten, Aufbewahrung und Anonymisierung: Pruefung-Version41.md. Der produktive Cast-Betrieb benötigt eine registrierte Receiver-App-ID.
