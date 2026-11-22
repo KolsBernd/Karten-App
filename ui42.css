@@ -1,0 +1,7 @@
+/* Portraits and names share the center of their own score column.  The
+ * category/round heading remains a normal table cell and keeps its width. */
+#snTable thead th:not(:first-child),#klTable thead th:not(:first-child){text-align:center!important;vertical-align:middle}
+#snTable thead .hh-cross-player,#klTable thead .hh-cross-player{display:flex!important;flex-direction:column;align-items:center!important;justify-content:center;gap:5px;width:100%;max-width:none!important;min-width:0;text-align:center;white-space:normal}
+#snTable thead .hh-cross-player>.avatar-action,#klTable thead .hh-cross-player>.avatar-action{display:inline-flex!important;align-items:center!important;justify-content:center!important;align-self:center;margin:0 auto!important;padding:0!important;flex:none;max-width:100%}
+#snTable thead .hh-cross-player .avatar,#klTable thead .hh-cross-player .avatar{display:block;margin:0!important;flex:none}
+#snTable thead .hh-cross-player>.sn-name,#klTable thead .hh-cross-player>span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}

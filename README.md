@@ -1,4 +1,4 @@
-# Kartabend 41
+# Kartabend 42
 
 https://kolsbernd.github.io/Karten-App/
 
@@ -8,4 +8,6 @@ Bei 21 rückwärts markieren grüne Ränder Farbe und Stichzahl. Ausgesetzte Spi
 
 Google Cast ist vorbereitet, aber noch nicht aktiviert: registrierte öffentliche Receiver-App-ID in config.js erforderlich. Ohne diese lädt kein Google-SDK und der Button weist auf die fehlende Einrichtung hin. Empfängeradresse für die Registrierung: https://kolsbernd.github.io/Karten-App/cast-receiver.html. Anleitung: CAST-EINRICHTUNG.md. Jeder Mitspieler benötigt kein eigenes Cast-Entwicklerkonto. AirPlay für eine eigenständige HTML-Anzeige erfordert einen gesonderten nativen Ausbau und ist nicht als Gerätepicker in dieser Web-App umgesetzt.
 
-Migration 44 erweitert die vorhandenen Raumregeln und Statistiken, ohne Spielstände zu löschen. Handbuch und Datenschutz sind aktualisiert. Prüfumfang und Grenzen: Pruefung-Version41.md. Die bestehende Sicherheitsprüfung Version 40 bleibt ein historischer Bericht.
+Migration 44 erweitert die vorhandenen Raumregeln und Statistiken, ohne Spielstände zu löschen. Handbuch und Datenschutz sind aktualisiert. Prüfumfang und Grenzen: Pruefung-Version42.md. Die bestehende Sicherheitsprüfung Version 40 bleibt ein historischer Bericht.
+
+Version 42 korrigiert den tatsächlichen Krawallo-Einstieg: eigener Renderer statt Weiterleitung an Schafkopf, vollständige Spielbutton-Kennung und gemeinsamer Handler. Beide Kreuztabellen richten Profilbilder und Namen mittig aus. Neue Integrationstests klicken die tatsächlichen Spielbuttons und prüfen Punkteerfassung sowie Kopfzellen.

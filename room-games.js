@@ -492,7 +492,9 @@
       const st = sheet();
       document.querySelectorAll('#gameSegments button').forEach(b => b.disabled = !!(st.rounds.length && !st.closed));
       if (playing) {
-        if (kind === '21 rückwärts')
+        if (kind === 'Krawallo')
+          krawallo.render(st, root);
+        else if (kind === '21 rückwärts')
           backwardUI(st);
         else
           schafUI(st);
