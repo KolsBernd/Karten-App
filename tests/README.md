@@ -17,3 +17,5 @@ Version 42 prüft den tatsächlichen Krawallo-Button im vollständigen App-DOM: 
 Version 43 ergänzt ausdrückliche Ja/Nein-Stichsummenprüfungen für 21 rückwärts und Klopfer, eindeutige grüne Stichzahlbuttons, neue kompakte Krawallo-Erfassung einschließlich Flatterer sowie Teamauswahl im Spielermenü. Alte Ablaufprüfungen bestätigen nur die neue Stichsummenwarnung automatisch; gesonderte Tests deaktivieren diese Hilfe und prüfen Nein/Ja ausdrücklich. Serverregression und Versionsformate: Pruefung-Version43.md.
 
 Version 44 stellt Ergebnisbuttons auf rote Füllung um. Die bestehende Auswahlprüfung kontrolliert roten Rand und Hintergrund, weiterhin genau eine Stichzahl, Standard 0 und die unveränderte Punkteberechnung.
+
+Version 45 ergänzt einen App-Ablauf für Spielartauswahl bei Start/Rücknahme/Abschluss und die gemeinsame 21-rückwärts-Kachel mit geordneter Erfassung, Verlauf und vorbereitender Spielerauswahl. Abgeschlossene Mitspieler bleiben bis Neue Partie schreibgeschützt.

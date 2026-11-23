@@ -131,9 +131,10 @@
         c.fail(error);
       }
     }
-    function roster(st) {
-      const area = el('div', 'panel extra-roster');
+    function roster(st, embedded = false) {
+      const area = el('div', (embedded ? '' : 'panel ') + 'extra-roster');
       area.append(el('h2', '', 'Spieler auswählen'));
+      if (st.closed) area.append(el('p', 'small muted', 'Nach Neue Partie kannst du die Spielerauswahl ändern.'));
       for (const p of c.people().filter(p => !p.deleted)) {
         const b = button('', () => {
           requireWrite();
@@ -149,6 +150,7 @@
           }
           c.save();
         });
+        b.disabled = !!st.closed;
         b.className = 'hh-avatar-choice extra-player-choice';
         b.setAttribute('aria-pressed', String(st.players.includes(p.id)));
         b.innerHTML = c.selection(p);
@@ -244,12 +246,11 @@
     function backwardUI(st) {
       header(st);
       root.replaceChildren();
-      if (!st.rounds.length && !st.closed)
-        root.append(roster(st));
-      const panel = el('div', 'panel');
-      panel.append(el('h2', '', '21 rückwärts'));
+      const panel = el('div', 'panel backward-panel');
+      const entry = el('section', 'backward-entry');
+      entry.append(el('h2', '', 'Spielerfassung · 21 rückwärts'));
       if (st.closed) {
-        panel.append(el('p', 'tt-running', 'Partie beendet'), button('Ergebnis anzeigen', () => resultDialog(st)), button('Neue Partie', () => newGame(st), 'primary hh-wide-button'));
+        entry.append(el('p', 'tt-running', 'Partie beendet'), button('Ergebnis anzeigen', () => resultDialog(st)), button('Neue Partie', () => newGame(st), 'primary hh-wide-button'));
       } else {
         const key = c.room() + ':' + st.id + ':' + st.rounds.length;
         if (key !== draftKey) {
@@ -273,7 +274,7 @@
           b.prepend(image);
           suits.append(b);
         }
-        panel.append(suits);
+        entry.append(suits);
         for (const id of st.players) {
           const state = choices.get(id) || {
             tricks: 0,
@@ -301,9 +302,9 @@
           exclude.setAttribute('aria-pressed', String(state.excluded));
           exclude.disabled = suit === 'Eichel';
           row.append(name, nums, exclude);
-          panel.append(row);
+          entry.append(row);
         }
-        panel.append(button('Partie eintragen', async () => {
+        entry.append(button('Partie eintragen', async () => {
           if (entryBusy) return;
           requireWrite();
           if (st.players.length < 2) throw Error('Mindestens zwei Spieler auswählen.');
@@ -325,19 +326,21 @@
       }
       const back = button('Letzte Partie zurücknehmen', undo, 'ghost hh-wide-button');
       back.disabled = !st.rounds.length;
-      panel.append(back);
+      entry.append(back);
+      panel.append(entry);
+      history(st, panel, true);
+      if (!st.rounds.length || st.closed) panel.append(roster(st, true));
       root.append(panel);
-      history(st);
     }
-    function history(st) {
-      const panel = el('div', 'panel');
+    function history(st, host = root, embedded = false) {
+      const panel = el('div', embedded ? 'backward-history' : 'panel');
       panel.append(el('h2', '', 'Aktuelle Runden'));
       for (const [i, round] of [...st.rounds.entries()].reverse()) {
         const row = el('div', 'entry');
         row.append(el('span', '', i + 1 + '. ' + (round.suit || round.variant || 'Partie') + ' \xB7 ' + (round.actor_name || '') + ' ' + (round.duration_seconds == null ? '' : round.duration_seconds + ' Sek.')), el('strong', '', round.results.map(p => p.points).join(' : ')));
         panel.append(row);
       }
-      root.append(panel);
+      host.append(panel);
     }
     function schafUI(st) {
       if (st.players.length !== 4 || !st.rounds.length && !st.closed) {

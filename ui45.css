@@ -1,0 +1,8 @@
+/* Running parties keep the scoring screen free of unavailable game choices. */
+.game-switch[hidden]{display:none!important}
+/* One frame, three ordered sections. No independently bordered inner cards. */
+.backward-panel{min-width:0}
+.backward-panel>.backward-entry,.backward-panel>.backward-history,.backward-panel>.extra-roster{min-width:0;margin:0;border:0;background:transparent;box-shadow:none;padding:0}
+.backward-panel>.backward-history,.backward-panel>.extra-roster{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+.backward-panel>.extra-roster>h2,.backward-panel>.extra-roster>p{flex-basis:100%;margin:0 0 8px}
+.backward-entry>button{width:100%;min-height:48px;margin-top:10px}
