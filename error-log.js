@@ -135,6 +135,11 @@
       }
     }
   }
+  // Fixed explanations help the operator interpret counts without collecting
+  // raw exception text, stack traces, names, addresses or chat content.
+  function description(code) {
+    return ({NETWORK:'Verbindung unterbrochen oder Zeitüberschreitung',JS_TYPE:'Unerwarteter Datentyp im Programm',JS_REFERENCE:'Programm verweist auf einen fehlenden Wert',JS_ERROR:'Allgemeiner Fehler; Ursache nicht gespeichert',RESOURCE_LOAD:'Datei konnte nicht geladen werden',AUTH_FAILED:'Anmeldung fehlgeschlagen',VALIDATION:'Eingabeprüfung fehlgeschlagen',RPC_RULE:'Server hat einen unzulässigen Vorgang abgewiesen','23505':'Eintrag existiert bereits','23503':'Verknüpfter Datensatz fehlt','42501':'Berechtigung fehlt','40001':'Gleichzeitige Änderungen; erneut synchronisieren',PGRST202:'Serverfunktion fehlt oder ist noch nicht bereit',PGRST301:'Anmeldesitzung ungültig oder abgelaufen'})[code] || 'Unbekannter Fehlercode';
+  }
   async function openReport() {
     const request = ++reportRequest;
     let dialog = document.getElementById('hhErrorReport');
@@ -175,6 +180,7 @@
       const head = table.createTHead().insertRow();
       for (const name of [
           'Code',
+          'Bedeutung',
           'Bereich',
           'Version',
           'Häufigkeit',
@@ -190,6 +196,7 @@
         const tr = rows.insertRow();
         for (const value of [
             row.code,
+            description(row.code),
             row.source,
             row.build,
             row.occurrences,

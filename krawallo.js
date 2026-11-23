@@ -34,6 +34,13 @@
     const score = totals(sheet), best = Math.max(...score);
     return sheet.players.map((id, i) => ({ id, points: score[i < 2 ? 0 : 1], netPoints: score[i < 2 ? 0 : 1] - score[i < 2 ? 1 : 0], won: score[i < 2 ? 0 : 1] === best && best >= 31 }));
   }
+  // Losses have the declared value but award the opposing team. Resolve the
+  // canonical bonus once, shared by preview and saved entry validation.
+  function outcomeFor(draft) {
+    if (draft.result !== 'Verloren') return draft.result === 'Schwarz' ? 'Durch' : draft.result;
+    return ['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(draft.announcement) ? 'Durch'
+      : draft.announcement === 'Schneider angesagt' ? 'Schneider' : 'Schneider frei';
+  }
   function round(sheet, draft) {
     if (sheet.players.length !== 4 || new Set(sheet.players).size !== 4 || !VARIANTS.includes(draft.variant) || ![0, 1].includes(draft.winner))
       throw Error('Zwei feste Zweierteams und Gewinner wählen.');
@@ -43,7 +50,7 @@
     // A loss awards the same declared value to the opposing team. Store the
     // canonical result so old clients and the server validate the same points.
     const lost = draft.result === 'Verloren';
-    const outcome = lost ? (['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(draft.announcement) ? 'Durch' : draft.announcement === 'Schneider angesagt' ? 'Schneider' : 'Schneider frei') : draft.result === 'Schwarz' ? 'Durch' : draft.result;
+    const outcome = outcomeFor(draft);
     const winner = lost ? 1 - draft.winner : draft.winner;
     const awarded = points(draft.announcement, outcome, draft.shots);
     scores[winner] += awarded;
@@ -142,7 +149,7 @@
           group('Spielergebnis', [...available, 'Verloren'].map(v => [v, v]), draft.result, v => draft.result = v, 'kw-results');
         }
         if (draft.announcement === 'Aufsteher') group('Spielergebnis', ['Durch', 'Verloren'].map(v => [v, v]), draft.result, v => draft.result = v, 'kw-results');
-        const previewResult = draft.result === 'Verloren' ? (['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(draft.announcement) ? 'Durch' : draft.announcement === 'Schneider angesagt' ? 'Schneider' : 'Schneider frei') : draft.result;
+        const previewResult = outcomeFor(draft);
         panel.append(node('p', 'kw-preview', points(draft.announcement, previewResult, draft.shots) + ' Punkte' + (draft.announcement === 'Aufsteher' ? ' · sofort entschieden' : '')));
         if (!st.rounds.length && (st.players.length !== 4 || st.teamsDraft?.some(t => t.length !== 2))) panel.append(button('Teams unter Spieler auswählen', () => c.openPlayers?.()));
         const add = button('Partie eintragen', async () => {
