@@ -343,13 +343,15 @@
       host.append(panel);
     }
     function schafUI(st) {
-      if (st.players.length !== 4 || !st.rounds.length && !st.closed) {
-        root.replaceChildren(roster(st));
+      if (st.players.length !== 4) {
+        // Preparation stays in the same card even before four seats are filled.
+        window.HHSchafkopf.clear();
+        schafMounted = false;
+        const panel = el('section', 'panel tt-schaf-scoring');
+        panel.append(el('h2', '', 'Ergebnis erfassen'), el('p', 'small muted', 'Genau vier Spieler auswählen.'), roster(st, true));
+        root.replaceChildren(panel);
         header(st);
-        if (st.players.length !== 4) {
-          root.append(el('p', 'small muted', 'Genau vier Spieler auswählen.'));
-          return;
-        }
+        return;
       }
       const people = st.players.map(id => ({
         ...c.people().find(p => p.id === id),
@@ -393,8 +395,9 @@
       schafMounted = true;
       const gameRoot = document.getElementById('hhTournamentSchafView');
       root.replaceChildren();
+      // Keep preparation inside the scoring card, after the entry controls.
       if (!st.rounds.length)
-        root.append(roster(st));
+        gameRoot.querySelector('.tt-schaf-scoring').append(roster(st, true));
       if (st.closed)
         gameRoot.prepend(button('Nächste Partie', () => newGame(st), 'primary hh-wide-button'));
     }
@@ -415,7 +418,7 @@
       }
       const form = el('form');
       const map = new Map();
-      for (const type of defaultSettings().variants) {
+      for (const type of [...defaultSettings().variants.filter(v => v !== 'Tout'), 'Bettel', 'Tout']) {
         const label = el('label', 'hh-check'), input = el('input');
         input.type = 'checkbox';
         input.checked = editing.variants.includes(type);

@@ -40,11 +40,15 @@
     if (!Number.isInteger(draft.shots) || draft.shots < 0 || draft.shots > 3) throw Error('Ohne, Kontra, Re oder Sub wählen.');
     const scores = totals(sheet);
     if (Math.max(...scores) >= 31) throw Error('Partie bereits beendet.');
-    const outcome = draft.result === 'Schwarz' ? 'Durch' : draft.result;
+    // A loss awards the same declared value to the opposing team. Store the
+    // canonical result so old clients and the server validate the same points.
+    const lost = draft.result === 'Verloren';
+    const outcome = lost ? (['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(draft.announcement) ? 'Durch' : draft.announcement === 'Schneider angesagt' ? 'Schneider' : 'Schneider frei') : draft.result === 'Schwarz' ? 'Durch' : draft.result;
+    const winner = lost ? 1 - draft.winner : draft.winner;
     const awarded = points(draft.announcement, outcome, draft.shots);
-    scores[draft.winner] += awarded;
+    scores[winner] += awarded;
     return {
-      entry_format: 'krawallo-v2', winner: draft.winner, variant: draft.variant,
+      entry_format: 'krawallo-v2', winner, variant: draft.variant,
       announcement: draft.announcement, result: outcome, shots: draft.shots,
       points: awarded, scores, results: sheet.players.map((id, i) => ({ id, points: scores[i < 2 ? 0 : 1] })), date: new Date().toISOString()
     };
@@ -124,20 +128,22 @@
           }
           section.append(heading, row); panel.append(section);
         };
-        group('Wer erhält die Punkte?', [[0, 'Team 1'], [1, 'Team 2']], draft.winner, v => draft.winner = v, 'kw-winners');
+        group('Welches Team spielt?', [[0, 'Team 1'], [1, 'Team 2']], draft.winner, v => draft.winner = v, 'kw-winners');
         group('Spiel', VARIANTS.map(v => [v, v, c.icons?.()[v]]), draft.variant, v => draft.variant = v, 'kw-games');
         group('Ansage', ANNOUNCEMENTS.slice(1).map(v => [v, v]), draft.announcement, v => {
           draft.announcement = v;
-          if (['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(v)) draft.result = 'Durch';
+          if (draft.result !== 'Verloren' && ['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(v)) draft.result = 'Durch';
           else if (v === 'Schneider angesagt' && draft.result === 'Schneider frei') draft.result = 'Schneider';
           if (v === 'Aufsteher') draft.shots = 0;
         }, 'kw-announcements', true);
         if (draft.announcement !== 'Aufsteher') {
           group('Geschossen', [[0, 'Ohne ×1'], [1, 'Kontra ×2'], [2, 'Re ×4'], [3, 'Sub ×8']], draft.shots, v => draft.shots = v, 'kw-shots');
           const available = draft.announcement === 'Grundspiel' ? RESULTS : draft.announcement === 'Schneider angesagt' ? RESULTS.slice(1) : ['Durch'];
-          group('Spielergebnis', available.map(v => [v, v]), draft.result, v => draft.result = v, 'kw-results');
+          group('Spielergebnis', [...available, 'Verloren'].map(v => [v, v]), draft.result, v => draft.result = v, 'kw-results');
         }
-        panel.append(node('p', 'kw-preview', points(draft.announcement, draft.result, draft.shots) + ' Punkte' + (draft.announcement === 'Aufsteher' ? ' · sofort gewonnen' : '')));
+        if (draft.announcement === 'Aufsteher') group('Spielergebnis', ['Durch', 'Verloren'].map(v => [v, v]), draft.result, v => draft.result = v, 'kw-results');
+        const previewResult = draft.result === 'Verloren' ? (['Tout', 'Schwarz angesagt', 'Aufsteher'].includes(draft.announcement) ? 'Durch' : draft.announcement === 'Schneider angesagt' ? 'Schneider' : 'Schneider frei') : draft.result;
+        panel.append(node('p', 'kw-preview', points(draft.announcement, previewResult, draft.shots) + ' Punkte' + (draft.announcement === 'Aufsteher' ? ' · sofort entschieden' : '')));
         if (!st.rounds.length && (st.players.length !== 4 || st.teamsDraft?.some(t => t.length !== 2))) panel.append(button('Teams unter Spieler auswählen', () => c.openPlayers?.()));
         const add = button('Partie eintragen', async () => {
           if (submitting) return;
@@ -163,6 +169,9 @@
       if (!dialog) { dialog = node('dialog', 'hh-confirm-dialog'); dialog.id = 'hhKrawalloResult'; document.body.append(dialog); }
       const score = totals(st), winner = score[0] > score[1] ? 0 : 1;
       dialog.replaceChildren(node('h2', '', 'Krawallo · Ergebnis'), node('strong', 'kw-final-score', score.join(' : ')), node('p', '', st.players.slice(winner * 2, winner * 2 + 2).map(c.name).join(' & ') + ' gewinnt'));
+      const faces = node('div', 'kw-final-winners');
+      for (const id of st.players.slice(winner * 2, winner * 2 + 2)) { const person = node('div'); person.innerHTML = c.avatar(id, true); person.append(node('span', '', c.name(id))); faces.append(person); }
+      dialog.insertBefore(faces, dialog.children[1]);
       dialog.append(button('Schließen', () => dialog.close())); if (!dialog.open) dialog.showModal();
     }
     return { render, renderTeams, clear() { key = ''; document.getElementById('hhKrawalloResult')?.close(); } };

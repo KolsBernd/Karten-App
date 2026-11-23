@@ -1,0 +1,19 @@
+/* Player seats remain legible inside red selected outcome buttons. */
+.tt-schaf-seat{background:var(--panel)!important;color:var(--text)!important;font-weight:700;z-index:1}
+.tt-schaf-scoring>.extra-roster{padding-top:18px;margin-top:18px;border-top:1px solid var(--line);background:transparent;box-shadow:none}
+.tt-schaf-scoring>.extra-roster>h2{flex-basis:100%}
+/* Four independent names: no wrapping into the next player's column. */
+.kw-faces{gap:clamp(10px,2vw,22px)}
+.kw-faces>div{overflow:hidden}
+.kw-faces>div>span:last-child{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;line-height:1.4}
+.kw-final-winners{display:flex;justify-content:center;gap:24px;margin:18px 0}
+.kw-final-winners>div{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;max-width:45%}
+.kw-final-winners img{width:64px;height:64px;object-fit:cover;border-radius:50%}
+.kw-final-winners span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.kw-scoring .kw-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* A real viewport host avoids Safari's display:contents/fixed combination.
+ * Its child can be created asynchronously without inheriting the scrolling gate. */
+#hhNavigationHost{display:block!important;position:fixed!important;inset:auto 0 0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;transform:none!important;filter:none!important;backdrop-filter:none!important;background:transparent!important;box-shadow:none!important;z-index:100010}
+#hhNavigationHost[hidden]{display:none!important}
+#hhNavigationHost>#hhLobbyNav{position:static!important;inset:auto!important;transform:none!important;width:100%!important;margin:0!important}
+body>.bottom-nav,body>#hhTournamentPlayNav{position:fixed!important;inset:auto 0 0!important;transform:none!important;width:100%!important;margin:0!important}
