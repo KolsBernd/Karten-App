@@ -9,6 +9,11 @@ async function snapshot(name,setup,options={}){
  try{
   if(setup)await setup(w);await tick();await tick();
   const doc=w.document;doc.querySelectorAll('script').forEach(n=>n.remove());
+  // The sandbox server is loopback HTTP, never the public deployment. WebKit
+  // would otherwise upgrade local CSS/images to TLS. Keep every other policy
+  // and add a stricter no-script/no-connect response policy on the test server.
+  doc.querySelectorAll('meta[http-equiv="Content-Security-Policy"]').forEach(n=>n.content=n.content.replace(/upgrade-insecure-requests;?/g,''));
+  doc.querySelectorAll('link[rel=manifest]').forEach(n=>n.remove());
   doc.querySelectorAll('*').forEach(n=>{for(const a of [...n.attributes])if(a.name.startsWith('on'))n.removeAttribute(a.name)});
   // Production correctly forbids <base>. Root the local asset URLs explicitly
   // instead, so the unchanged CSP can remain active in these offline fixtures.

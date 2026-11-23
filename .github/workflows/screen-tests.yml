@@ -18,6 +18,13 @@ jobs:
           node-version: '22'
       - name: Testabhaengigkeiten
         run: npm install --ignore-scripts --no-audit --no-fund --prefix tests
+      - name: Lesbare Schafkopf-Formatierung
+        run: |
+          npx --yes prettier@3.6.2 --write schafkopf.js
+          node - <<'JS'
+          const fs=require('fs'),b=fs.readFileSync('schafkopf.js').toString('base64');
+          for(let i=0;i<b.length;i+=6000)console.log('SOURCE47|schafkopf.js|'+(i/6000)+'|'+b.slice(i,i+6000));
+          JS
       - name: Funktionstests
         run: npm test --prefix tests
       - name: Anonyme Ansichten aufbauen

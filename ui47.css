@@ -1,0 +1,4 @@
+/* The navigation wrapper shares typography with auth panels, not their
+ * mobile full-screen minimum height. Otherwise Chromium places the menu at
+ * the top of a viewport-sized fixed wrapper instead of the bottom edge. */
+#hhNavigationHost{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}

@@ -4,7 +4,7 @@ for(const name of ['login','registration','lobby','settings','profile','request-
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
  await page.goto('/fixtures/'+name+'.html');await page.evaluate(()=>document.fonts.ready);
- expect(await page.locator('link[rel=stylesheet]').evaluateAll(links=>links.every(link=>!!link.sheet))).toBe(true);
+ expect(await page.locator('link[rel=stylesheet]').evaluateAll(links=>links.every(link=>!!link.sheet&&link.sheet.cssRules.length>0))).toBe(true);
  console.log('ASSETS47 '+name+' '+info.project.name+' '+JSON.stringify(await page.evaluate(()=>({images:[...document.querySelectorAll('img[src]')].filter(n=>n.getAttribute('src')&&!n.naturalWidth).map(n=>({src:n.getAttribute('src')?.slice(0,80),complete:n.complete,visible:!!n.getClientRects().length})),host:(()=>{const n=document.getElementById('hhNavigationHost');if(!n)return null;const s=getComputedStyle(n);return {display:s.display,position:s.position,top:s.top,bottom:s.bottom,height:s.height,inset:s.inset,rect:n.getBoundingClientRect().toJSON()}})()}))));
  const metrics=await page.evaluate(()=>{
   const scrolled=n=>{for(let p=n.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),r=p.getBoundingClientRect();if(/auto|scroll/.test(s.overflowX)&&p.scrollWidth>p.clientWidth&&r.left>=-2&&r.right<=innerWidth+2)return true}return false};
