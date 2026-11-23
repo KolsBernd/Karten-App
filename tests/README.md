@@ -21,3 +21,5 @@ Version 44 stellt Ergebnisbuttons auf rote Füllung um. Die bestehende Auswahlpr
 Version 45 ergänzt einen App-Ablauf für Spielartauswahl bei Start/Rücknahme/Abschluss und die gemeinsame 21-rückwärts-Kachel mit geordneter Erfassung, Verlauf und vorbereitender Spielerauswahl. Abgeschlossene Mitspieler bleiben bis Neue Partie schreibgeschützt.
 
 Version 46 prüft die gemeinsame Schafkopf-Kachel, Bettel mit 1/2/3 Punkten, sichtbare Platznummern, Krawallo-Niederlagen für alle Ansagen und Gewinnerbilder sowie spät erzeugte und ersetzte Menüleisten.
+
+Version 47 ergänzt wiederverwendbare App-Testadapter, einen Historien-Cache-Test und isolierte Bildschirmtests. Einrichtung und Grenzen stehen in docs/ENTWICKLUNG.md; die Browsermatrix umfasst 13 Ansichten in vier Projekten.

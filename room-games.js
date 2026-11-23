@@ -81,6 +81,7 @@
   }
   function create(c) {
     let entryBusy = false;
+    let archiveRecords = [], archivePeople = [], archiveElement = null;
     let draftKey = '', suit = 'Eichel', choices = new Map(), busy = false, schafMounted = false, settingsDraft = null, settingsKey = '';
     const krawallo = window.HHKrawallo.create({...c,requireWrite,finish,newGame,undo,history});
     const root = el('section', 'hide');
@@ -471,6 +472,16 @@
         box.id = 'hhExtraHistory';
         document.getElementById('sessions')?.after(box);
       }
+      // Completed records are immutable. Avoid rebuilding the full history DOM
+      // whenever a player changes an input in the current hand. Identity/profile
+      // changes and replaced server records still invalidate this small cache.
+      const records = c.sessions().flatMap(session => (session.extraHistory || []).map(record => [session.id, record]));
+      const people = c.people().map(p => [p.id, c.name(p.id), p.photo, p.avatar, p.deleted]);
+      const sameRows = (left, right) => left.length === right.length && left.every((row, i) => row.length === right[i].length && row.every((value, j) => value === right[i][j]));
+      if (box === archiveElement && sameRows(records, archiveRecords) && sameRows(people, archivePeople)) return;
+      archiveElement = box;
+      archiveRecords = records;
+      archivePeople = people;
       const open = new Set([...box.querySelectorAll('details[open]')].map(n => n.dataset.key));
       box.replaceChildren();
       for (const session of c.sessions())

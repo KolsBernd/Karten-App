@@ -1,0 +1,41 @@
+name: Bildschirmtests
+on:
+  push:
+    branches: [main, 'audit/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testabhaengigkeiten
+        run: npm install --ignore-scripts --no-audit --no-fund --prefix tests
+      - name: Lesbare Schafkopf-Formatierung pruefen
+        run: npx --yes prettier@3.6.2 --check schafkopf.js
+      - name: Funktionstests
+        run: npm test --prefix tests
+      - name: Anonyme Ansichten aufbauen
+        run: node tests/visual/build.cjs
+      - name: Bildschirmtest-Abhaengigkeiten
+        run: npm install --ignore-scripts --no-audit --no-fund --prefix tests/visual
+      - name: Testbrowser
+        working-directory: tests/visual
+        run: npx playwright install --with-deps chromium webkit
+      - name: Handy und Tablet
+        run: npm test --prefix tests/visual
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bildschirmtests
+          path: |
+            tests/visual/test-results
+            tests/visual/playwright-report
+          retention-days: 7

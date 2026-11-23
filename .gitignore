@@ -1,0 +1,8 @@
+node_modules/
+tests/visual/fixtures/
+tests/visual/test-results/
+tests/visual/playwright-report/
+.env
+.env.*
+*.pem
+*.key

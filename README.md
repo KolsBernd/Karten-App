@@ -1,17 +1,27 @@
-# Kartabend 46
+# Kartabend 47
 
-https://kolsbernd.github.io/Karten-App/
+Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
-21 rückwärts prüft insgesamt fünf Stiche der aktiven Spieler. Klopfer prüft 11 minus Spielerzahl. Abweichungen können nach einer ausdrücklichen Ja/Nein-Warnung gespeichert werden; der Eintrag enthält dann ein Kontrollmerkmal. Klopfer markiert genau eine Stichzahl grün, Standard 0. Richtig gibt 5 plus Stichzahl, Falsch 0.
+- **App nutzen:** [Nutzerhandbuch öffnen](nutzerhandbuch.html), [PDF](nutzerhandbuch.pdf). Alle Spielregeln, Einladungen und Einstellungen werden dort ohne Programmierkenntnisse erklärt.
+- **Code verstehen:** [Architektur](docs/ARCHITEKTUR.md) und [Entwicklung und Tests](docs/ENTWICKLUNG.md).
+- **Sicherheit und Kopierbarkeit:** [Prüfumfang und Grenzen](SECURITY.md).
+- **Aktueller Befund:** [Prüfung Version 47](Pruefung-Version47.md).
+- **Einheitliche Bedienung:** [Gestaltungsregeln](docs/BEDIENUNG.md).
 
-Krawallo verwendet Teams aus dem Spielermenü und eine kompakte Erfassung mit den Schniffelkopf-Logos für Solo, King, Geier, Wenz und Flatterer. Keine neue Farberfassung. Ansage optional; Geschossen als Ohne/Kontra/Re/Sub ×1/×2/×4/×8; Durch statt Schwarz im Ergebnis. Grundspiel 4/5/6, Schneider angesagt 6/7, Schwarz angesagt 8, Tout 12; Aufsteher gewinnt sofort mit 31 Punkten ohne zusätzlichen Schuss.
+## Betrieb
 
-Migration 45 ergänzt die serverseitigen Regeln und versioniert neue Einträge. Bestehende Verläufe behalten ihre Wertung. Handbuch 44 und Datenschutz sind aktualisiert. Tests und Grenzen: Pruefung-Version46.md und tests/README.md.
+Die veröffentlichten Dateien liegen im Stammverzeichnis des GitHub-Pages-Repositories. Die öffentliche Supabase-Adresse und der Browser-Schlüssel stehen in `config.js`. Dieser Schlüssel ist kein Administratorpasswort. Server-Schlüssel, SMTP-Zugang, private Schlüssel und Datenbanksicherungen gehören niemals ins Repository.
 
-Google Cast bleibt bis zur Betreiberregistrierung vorbereitet, aber deaktiviert; CAST-EINRICHTUNG.md beschreibt die spätere Einrichtung. AirPlay für eine eigenständige TV-Ausgabe benötigt einen gesonderten nativen Ausbau.
+Anmeldung und Online-Räume benötigen die eingerichteten Supabase-Funktionen. Eine Kopie der HTML-Dateien ist keine eigenständige Kopie des Backends. Bestehende SQL-Dateien dokumentieren die Entwicklung; sie sind keine Einladung, alle Migrationen ungeprüft erneut in einer produktiven Datenbank auszuführen.
 
-Version 44 vereinheitlicht ausgewählte Ergebnisbuttons: rote Füllung #AA0B24 mit weißer Schrift statt grünem Rahmen. Die grüne Profilmarkierung bleibt der Spielerauswahl vorbehalten.
+## Änderungen in Version 47
 
-Version 45 blendet die Spielartauswahl bei laufenden Partien aus und stellt sie nach Abschluss beziehungsweise vollständiger Rücknahme wieder her. 21 rückwärts vereint Erfassung, Verlauf und vorbereitende Spielerauswahl in einer Kachel. Handbuch 45 aktualisiert.
+Die mobile Menüleiste übernimmt nicht mehr die Mindesthöhe eines Anmeldefensters. Unveränderte Zusatzspiel-Historien werden bei Eingaben nicht erneut aufgebaut. Änderungen an Profilen, neue Serverstände und Rücksetzungen aktualisieren sie weiterhin. Krawallo verwendet dieselbe Berechnung für Vorschau und gespeicherten Ausgang. Das Fehlerprotokoll erklärt die bereinigten Fehlercodes. Isolierte Bildschirmtests ergänzen die bisherigen Funktionstests.
 
-Version 46 ergänzt Bettel im Raum, gemeinsame Schafkopf-Erfassung, kontrastreiche Platznummern, Krawallo-Niederlagen und Gewinnerbilder sowie robuste feste Navigation bei später aufgebauten Menüs. Datenbankergänzung: 46-bettel-und-spielwuensche.sql.
+## Noch vorbereitet
+
+Google Cast bleibt ohne öffentliche Receiver-App-ID deaktiviert. [Einrichtung](CAST-EINRICHTUNG.md). Eine unabhängige AirPlay-Ausgabe benötigt weiterhin einen nativen Ausbau.
+
+## Urheberrecht
+
+Die eigene Software unterliegt dem Urheberrecht von Bernd Dinkel. Enthaltene Fremdbibliotheken und deren Lizenzhinweise bleiben davon unberührt. Ein öffentliches Repository macht den Code technisch lesbar und innerhalb der GitHub-Regeln forkbar; es erteilt keine pauschale Erlaubnis zu beliebiger Weiterverwendung.
