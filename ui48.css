@@ -1,0 +1,17 @@
+/* Use the same responsive team grid and portrait choices as the other team games. */
+#hhKrawalloTeams .kw-teams{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#hhKrawalloTeams .kw-roster{display:flex;flex-wrap:wrap;align-content:flex-start;gap:12px}
+#hhKrawalloTeams .kw-roster h3{flex-basis:100%;margin:0 0 5px}
+#hhKrawalloTeams .extra-player-choice{flex:0 1 92px;width:92px;max-width:100%;min-width:0;padding:5px!important}
+#hhKrawalloTeams .extra-player-choice .hh-selection-face{width:58px;height:58px;box-sizing:border-box}
+#hhKrawalloTeams .hh-wide-button{width:100%;min-height:48px;margin-top:14px}
+@media(max-width:600px){#hhKrawalloTeams .kw-teams{grid-template-columns:1fr}}
+/* Explicit two-team/four-person columns replace the general solo-score sizing.
+ * Portraits shrink with their available column, never by clipping the button. */
+#hhSoloScore:has(.kw-team){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,3vw,30px);overflow:visible!important;padding:8px 0!important}
+#hhSoloScore .kw-team{width:auto!important;max-width:100%;min-width:0!important;flex:none!important}
+#hhSoloScore .kw-faces{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,2vw,18px);min-width:0}
+#hhSoloScore .kw-person{width:100%;min-width:0;overflow:visible;display:flex;flex-direction:column;align-items:center;gap:5px}
+#hhSoloScore .kw-person .avatar-action{padding:0!important;margin:0!important;min-width:0!important;min-height:0!important;max-width:100%;width:clamp(36px,8vw,64px);height:clamp(36px,8vw,64px);flex-shrink:0}
+#hhSoloScore .kw-person .avatar{width:100%!important;height:100%!important;max-width:100%;object-fit:cover;box-sizing:border-box}
+#hhSoloScore .kw-person>span:last-child{width:100%;min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;text-align:center;font-size:clamp(11px,2.6vw,15px)}

@@ -33,6 +33,7 @@ async function snapshot(name,setup,options={}){
   w.document.getElementById('hhNewRoomPlus').click();const type=w.document.getElementById('evCreateType');type.value='plan';type.onchange();
  });
  for(const type of ['Bierkopf','Schleifer','Schniffelkopf','Klopfer','21 rückwärts','Schafkopf','Krawallo'])
-  await snapshot('game-'+({'21 rückwärts':'backwards',Schafkopf:'schafkopf',Krawallo:'krawallo',Bierkopf:'bierkopf',Schleifer:'schleifer',Schniffelkopf:'schniffelkopf',Klopfer:'klopfer'})[type],async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType(type)});
- console.log('Built 13 anonymous production-DOM fixtures without executable scripts.');
+  await snapshot('game-'+({'21 rückwärts':'backwards',Schafkopf:'schafkopf',Krawallo:'krawallo',Bierkopf:'bierkopf',Schleifer:'schleifer',Schniffelkopf:'schniffelkopf',Klopfer:'klopfer'})[type],async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType(type)}, {longNames:type==='Krawallo'});
+ await snapshot('krawallo-teams',async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType('Krawallo');w.tab('people')},{longNames:true});
+ console.log('Built 14 anonymous production-DOM fixtures without executable scripts.');
 })().catch(e=>{console.error(e);process.exit(1)});
