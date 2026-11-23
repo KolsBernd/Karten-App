@@ -2,3 +2,9 @@
  * mobile full-screen minimum height. Otherwise Chromium places the menu at
  * the top of a viewport-sized fixed wrapper instead of the bottom edge. */
 #hhNavigationHost{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+/* Compact headers keep the full accessible name, while visual overflow is
+ * represented by an ellipsis instead of splitting the last letter to a line. */
+.club-header .header-title{min-width:0;flex:1 1 100px}
+#hhCurrentRoomTitle{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Portrait initials sit on a pale avatar surface even inside a red choice. */
+.tt-schaf-choices button[aria-pressed=true] .tt-schaf-avatar{color:var(--text)!important}
