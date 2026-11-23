@@ -23,3 +23,5 @@ Version 45 ergänzt einen App-Ablauf für Spielartauswahl bei Start/Rücknahme/A
 Version 46 prüft die gemeinsame Schafkopf-Kachel, Bettel mit 1/2/3 Punkten, sichtbare Platznummern, Krawallo-Niederlagen für alle Ansagen und Gewinnerbilder sowie spät erzeugte und ersetzte Menüleisten.
 
 Version 47 ergänzt wiederverwendbare App-Testadapter, einen Historien-Cache-Test und isolierte Bildschirmtests. Einrichtung und Grenzen stehen in docs/ENTWICKLUNG.md; die Browsermatrix umfasst 13 Ansichten in vier Projekten.
+
+Version 48 prüft Krawallo-Teamentwurf, Speichern, gegnerseitig ausgeschlossene Spieler und laufende Sperre. Die Bildschirmmatrix umfasst zusätzlich den Krawallo-Spielerbereich und lange Namen; Profilbilder müssen vollständig in ihrer Spalte bleiben.

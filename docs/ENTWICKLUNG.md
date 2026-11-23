@@ -21,7 +21,7 @@ npx playwright install --with-deps chromium webkit
 npm test
 ```
 
-Der Aufbau erzeugt aus der tatsächlichen App-Oberfläche 13 anonyme Ansichten: Anmeldung, Registrierung, Raumübersicht, Profil, Einstellungen, Anfrageformular und die sieben Raumspiele. Alle Skripte und ausführbaren Ereignisattribute werden vor dem Öffnen entfernt. Nur in den erzeugten Loopback-Testdateien wird die HTTPS-Aufwertung entfernt, damit WebKit lokale HTTP-Testdateien laden kann; die produktive CSP bleibt unverändert. Die Testantworten sperren Skripte und Backendverbindungen zusätzlich. Der lokale Testserver bindet ausschließlich an 127.0.0.1. Ausgehende Browseranfragen und Verbindungen zum echten Backend werden gesperrt.
+Der Aufbau erzeugt aus der tatsächlichen App-Oberfläche 14 anonyme Ansichten: Anmeldung, Registrierung, Raumübersicht, Profil, Einstellungen, Anfrageformular die sieben Raumspiele und die Krawallo-Teamauswahl. Alle Skripte und ausführbaren Ereignisattribute werden vor dem Öffnen entfernt. Nur in den erzeugten Loopback-Testdateien wird die HTTPS-Aufwertung entfernt, damit WebKit lokale HTTP-Testdateien laden kann; die produktive CSP bleibt unverändert. Die Testantworten sperren Skripte und Backendverbindungen zusätzlich. Der lokale Testserver bindet ausschließlich an 127.0.0.1. Ausgehende Browseranfragen und Verbindungen zum echten Backend werden gesperrt.
 
 Getestet werden Chromium und WebKit mit Handygrößen 390 × 844 und 375 × 812 sowie Tabletgrößen 744 × 1133 und 1133 × 744. Das sind Browser-Simulationen, keine echten iPhones oder iPads. Die Prüfungen erkennen Seitenüberlauf, unerwartet außerhalb liegende Bedienelemente und verschobene Navigation. Gewollt horizontal verschiebbare Tabellen werden gesondert behandelt.
 

@@ -61,7 +61,7 @@
     };
   }
   function create(c) {
-    let key = '', draft, submitting = false, teamPanel;
+    let key = '', draft, submitting = false, teamPanel, rosterKey = '', rosterDraft = [];
     const node = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls || ''; if (text !== undefined) n.textContent = String(text); return n; };
     const button = (text, action, pressed) => {
       const b = node('button', 'ghost', text); b.type = 'button';
@@ -84,16 +84,21 @@
         if (legacy) legacy.before(teamPanel); else people.append(teamPanel);
       }
       teamPanel.hidden = !st;
-      if (!st) { teamPanel.replaceChildren(); return; }
-      teamPanel.replaceChildren(node('h2', '', 'Krawallo · Teams auswählen'));
+      if (!st) { rosterKey = ''; teamPanel.replaceChildren(); return; }
+      teamPanel.replaceChildren(node('h2', '', 'Teams konfigurieren · Krawallo'));
       if (st.rounds.length) {
         teamPanel.append(node('p', 'small muted', st.closed ? 'Die gespielten Teams bleiben im Ergebnis erhalten.' : 'Die Teams bleiben während der Partie fest.'));
         if (st.closed) teamPanel.append(button('Nächste Partie vorbereiten', () => c.newGame(st)));
         return;
       }
-      const selectedTeams = teams(st), columns = node('div', 'kw-teams');
+      const signature = c.room() + ':' + st.id + ':' + JSON.stringify(st.players);
+      if (rosterKey !== signature) {
+        rosterKey = signature;
+        rosterDraft = teams(st).map(ids => [...ids]);
+      }
+      const selectedTeams = rosterDraft, columns = node('div', 'grid kw-teams');
       for (let side = 0; side < 2; side++) {
-        const box = node('div', 'kw-roster'), selected = selectedTeams[side], other = selectedTeams[1 - side];
+        const box = node('div', 'stack kw-roster'), selected = selectedTeams[side], other = selectedTeams[1 - side];
         box.append(node('h3', '', 'Team ' + (side + 1) + ' · ' + selected.length + '/2'));
         for (const p of c.people().filter(p => !p.deleted && !other.includes(p.id))) {
           const b = button('', () => {
@@ -101,14 +106,24 @@
             if (st.rounds.length || st.closed) throw Error('Teams sind während der Partie fest.');
             const mine = selected.includes(p.id) ? selected.filter(id => id !== p.id) : [...selected, p.id];
             if (mine.length > 2) throw Error('Je Team zwei Spieler auswählen.');
-            st.teamsDraft = selectedTeams.map(ids => [...ids]); st.teamsDraft[side] = mine;
-            st.players = st.teamsDraft.flat(); c.save();
+            rosterDraft = selectedTeams.map(ids => [...ids]); rosterDraft[side] = mine;
+            renderTeams(st);
           }, selected.includes(p.id));
-          b.className = 'hh-avatar-choice extra-player-choice'; b.innerHTML = c.selection(p); box.append(b);
+          b.className = 'hh-avatar-choice extra-player-choice'; b.title = c.name(p.id); b.setAttribute('aria-label', c.name(p.id)); b.innerHTML = c.selection(p); box.append(b);
         }
         columns.append(box);
       }
-      teamPanel.append(columns, node('p', 'small muted', 'Genau zwei Personen pro Team. Ausgewählte Spieler erscheinen nicht beim anderen Team.'));
+      const save = button('Teams speichern', () => {
+        live(st);
+        if (st.rounds.length || st.closed) throw Error('Teams sind während der Partie fest.');
+        if (rosterDraft.some(ids => ids.length !== 2) || new Set(rosterDraft.flat()).size !== 4) throw Error('Genau zwei verschiedene Personen pro Team wählen.');
+        st.teamsDraft = rosterDraft.map(ids => [...ids]);
+        st.players = st.teamsDraft.flat();
+        c.save();
+      });
+      save.className = 'primary hh-wide-button';
+      save.disabled = rosterDraft.some(ids => ids.length !== 2);
+      teamPanel.append(columns, node('p', 'small muted', 'Genau zwei Personen pro Team. Ausgewählte Spieler erscheinen nicht beim anderen Team. Änderungen mit Teams speichern übernehmen.'), save);
     }
     function render(st, root) {
       const signature = c.room() + ':' + st.id + ':' + st.rounds.length;
@@ -118,7 +133,7 @@
       const values = totals(st), visualTeams = teams(st);
       for (let side = 0; side < 2; side++) {
         const team = node('div', 'hh-score-person kw-team'), faces = node('div', 'kw-faces');
-        for (const id of visualTeams[side]) { const p = node('div', ''); p.innerHTML = c.avatar(id, true); p.append(node('span', '', c.name(id))); faces.append(p); }
+        for (const id of visualTeams[side]) { const p = node('div', 'kw-person'); p.title = c.name(id); p.innerHTML = c.avatar(id, true); p.append(node('span', '', c.name(id))); faces.append(p); }
         team.append(faces, node('strong', '', values[side])); header.append(team);
       }
       const panel = node('div', 'panel kw-scoring'); panel.append(node('h2', '', 'Krawallo · bis 31'));
