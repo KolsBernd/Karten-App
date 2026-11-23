@@ -15,3 +15,6 @@
 #hhSoloScore .kw-person .avatar-action{padding:0!important;margin:0!important;min-width:0!important;min-height:0!important;max-width:100%;width:clamp(36px,8vw,64px);height:clamp(36px,8vw,64px);flex-shrink:0}
 #hhSoloScore .kw-person .avatar{width:100%!important;height:100%!important;max-width:100%;object-fit:cover;box-sizing:border-box}
 #hhSoloScore .kw-person>span:last-child{width:100%;min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;text-align:center;font-size:clamp(11px,2.6vw,15px)}
+
+#hhKrawalloTeams .extra-player-choice>span:last-child{display:block;width:100%;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+@media(max-width:420px){.kw-scoring .kw-games{grid-template-columns:repeat(3,minmax(0,1fr))}.kw-scoring .kw-games button{white-space:nowrap}}

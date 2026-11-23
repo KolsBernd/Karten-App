@@ -109,7 +109,7 @@
             rosterDraft = selectedTeams.map(ids => [...ids]); rosterDraft[side] = mine;
             renderTeams(st);
           }, selected.includes(p.id));
-          b.className = 'hh-avatar-choice extra-player-choice'; b.innerHTML = c.selection(p); box.append(b);
+          b.className = 'hh-avatar-choice extra-player-choice'; b.title = c.name(p.id); b.setAttribute('aria-label', c.name(p.id)); b.innerHTML = c.selection(p); box.append(b);
         }
         columns.append(box);
       }
