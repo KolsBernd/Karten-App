@@ -1,0 +1,10 @@
+const fs=require('fs'),assert=require('assert'),{JSDOM}=require('jsdom');
+const d=new JSDOM('<main><section id="play"></section><section id="roomsettings"></section><div id="sessions"></div></main>',{runScripts:'outside-only'}),w=d.window;
+w.eval(fs.readFileSync('krawallo.js','utf8'));w.eval(fs.readFileSync('room-games.js','utf8'));
+let label='Testspieler',g={id:1,date:'2026-11-23T12:00:00Z',gameType:'Schafkopf',rounds:[{variant:'Bettel',results:[{id:1,points:3}]}]},session={id:1,extraHistory:[g]};const person={id:1,photo:''};
+const c={type:()=> 'Bierkopf',sessions:()=>[session],people:()=>[person],name:()=>label,avatar:()=>'<span>Bild</span>',room:()=>null};const ui=w.HHRoomGames.create(c);ui.render();const box=w.document.getElementById('hhExtraHistory'),first=box.firstChild;first.open=true;
+for(let i=0;i<100;i++)ui.render();assert.equal(box.firstChild,first);assert(first.open);
+label='Neuer Anzeigename';ui.render();assert.notEqual(box.firstChild,first);assert.match(box.textContent,/Neuer Anzeigename/);const renamed=box.firstChild;
+person.photo='new-photo';ui.render();assert.notEqual(box.firstChild,renamed);
+session.extraHistory=[{...g,rounds:[{variant:'Bettel',results:[{id:1,points:2}]}]}];const previous=box.firstChild;ui.render();assert.notEqual(box.firstChild,previous);assert.match(box.textContent,/2 Punkte/);
+session.extraHistory=[];ui.render();assert.equal(box.children.length,0);w.close();console.log('PASS V47 archive: 100 unchanged renders preserve history DOM/open state; profile name/photo, replaced server results and reset invalidate cache.');

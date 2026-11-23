@@ -19,7 +19,15 @@ async function snapshot(name,setup,options={}){
 (async()=>{
  await snapshot('login',null,{logged:false});
  await snapshot('lobby');
+ await snapshot('registration',async w=>{w.document.getElementById('hhRegisterEmail').closest('details').querySelector('summary').click()},{logged:false});
+ await snapshot('settings',async w=>{w.document.getElementById('hhNavSettings').click()});
+ await snapshot('profile',async w=>{w.document.getElementById('hhNavProfile').click()});
+ await snapshot('request-form',async w=>{
+  w.eval(fs.readFileSync('evenings.js','utf8'));
+  await w.HHEvenings.refresh({user:{id:'test'},client:{rpc:async(name)=>({data:name==='hh_evening_preferences'?false:[]})},display:x=>x,confirm:async()=>true,fail:e=>{throw e},renderMessages(){},renderFriends(){},refreshSocial:async()=>{},refreshNotifications:async()=>{},refreshRooms:async()=>{}});
+  w.document.getElementById('hhNewRoomPlus').click();const type=w.document.getElementById('evCreateType');type.value='plan';type.onchange();
+ });
  for(const type of ['Bierkopf','Schleifer','Schniffelkopf','Klopfer','21 rückwärts','Schafkopf','Krawallo'])
   await snapshot('game-'+({'21 rückwärts':'backwards',Schafkopf:'schafkopf',Krawallo:'krawallo',Bierkopf:'bierkopf',Schleifer:'schleifer',Schniffelkopf:'schniffelkopf',Klopfer:'klopfer'})[type],async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType(type)});
- console.log('Built 9 anonymous production-DOM fixtures without executable scripts.');
+ console.log('Built 13 anonymous production-DOM fixtures without executable scripts.');
 })().catch(e=>{console.error(e);process.exit(1)});
