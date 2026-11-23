@@ -10,7 +10,9 @@ async function snapshot(name,setup,options={}){
   if(setup)await setup(w);await tick();await tick();
   const doc=w.document;doc.querySelectorAll('script').forEach(n=>n.remove());
   doc.querySelectorAll('*').forEach(n=>{for(const a of [...n.attributes])if(a.name.startsWith('on'))n.removeAttribute(a.name)});
-  const base=doc.createElement('base');base.href='/';doc.head.prepend(base);
+  // Production correctly forbids <base>. Root the local asset URLs explicitly
+  // instead, so the unchanged CSP can remain active in these offline fixtures.
+  doc.querySelectorAll('[src],[href]').forEach(n=>{for(const a of ['src','href']){const v=n.getAttribute(a);if(v&&!/^(?:[a-z]+:|\/|#)/i.test(v))n.setAttribute(a,'/'+v)}});
   fs.writeFileSync(path.join(output,name+'.html'),'<!doctype html>\n'+doc.documentElement.outerHTML);
  }finally{w.close()}
 }

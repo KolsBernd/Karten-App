@@ -3,6 +3,8 @@ for(const name of ['login','lobby','game-bierkopf','game-schleifer','game-schnif
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
  await page.goto('/fixtures/'+name+'.html');await page.evaluate(()=>document.fonts.ready);
+ expect(await page.locator('link[rel=stylesheet]').evaluateAll(links=>links.every(link=>!!link.sheet))).toBe(true);
+ expect(await page.locator('img[src]').evaluateAll(images=>images.filter(img=>img.getAttribute('src')&&!img.naturalWidth).map(img=>img.getAttribute('src')?.slice(0,80)))).toEqual([]);
  const metrics=await page.evaluate(()=>{
   const scrolled=n=>{for(let p=n.parentElement;p;p=p.parentElement){const s=getComputedStyle(p),r=p.getBoundingClientRect();if(/auto|scroll/.test(s.overflowX)&&p.scrollWidth>p.clientWidth&&r.left>=-2&&r.right<=innerWidth+2)return true}return false};
   const visible=n=>{const r=n.getBoundingClientRect(),s=getComputedStyle(n);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'};
