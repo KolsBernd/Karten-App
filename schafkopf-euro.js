@@ -12,7 +12,7 @@
     if(!games.includes(input.game)||!config[input.game]?.enabled)throw Error('Dieses Spiel ist nicht freigegeben.');
     const c=config[input.game].cents;if(!Number.isSafeInteger(c)||c<0||c>100000)throw Error('Ungültiger Grundbetrag.');
     const key=spikesAllowed(input.game)?[...new Set(input.spikes||[])].sort().join(''):'';
-    const factors={'':4,A:4,AB:6,ABC:7,ABCD:8,CD:7,D:8};if(!(key in factors))throw Error('Für Spitzen '+key+' ist noch kein Spielwert festgelegt.');
+    const factors={'':4,A:4,AB:6,ABC:7,ABCD:8,CD:7,D:8};if(!/^[ABCD]*$/.test(key))throw Error('Ungültige Spitzenwahl.');const spikeFactor=factors[key]??4;
     if(!['normal','schneider','durch'].includes(input.result))throw Error('Spielergebnis wählen.');
     if(input.result!=='normal'&&!config.Schneider.enabled)throw Error('Schneider ist nicht freigegeben.');
     if(input.result==='durch'&&!config.Durch.enabled)throw Error('Durch ist nicht freigegeben.');
@@ -22,10 +22,10 @@
     if(![1,2,4,8].includes(input.announcement)||!Number.isInteger(input.laid)||input.laid<0||input.laid>4)throw Error('Ungültiger Multiplikator.');
     if(input.laid&&!config.Legen.enabled)throw Error('Legen ist nicht freigegeben.');
     const bonus=input.game==='Ramsch'?0:(input.result==='normal'?0:config.Schneider.cents)+(input.result==='durch'?config.Durch.cents:0);
-    let quarters=c*factors[key]+bonus*4;
+    let quarters=c*spikeFactor+bonus*4;
     const multiplier=(input.tout||input.light?2:1)*input.announcement*2**input.laid;
     quarters*=multiplier;if(!Number.isSafeInteger(quarters))throw Error('Spielwert ist zu groß.');
-    return {quarters,cents:quarters/4,base:c,spikes:key,spikeQuarters:factors[key],bonus,multiplier,fractionalCent:quarters%4!==0};
+    return {quarters,cents:quarters/4,base:c,spikes:key,spikeQuarters:spikeFactor,bonus,multiplier,fractionalCent:quarters%4!==0};
   }
   function settlement(quarters,input){
     if(!Number.isSafeInteger(quarters)||quarters<0)throw Error('Ungültiger Spielwert.');
@@ -60,7 +60,7 @@
     if(config.Tout.enabled&&[...solo,'Bagga','Bettel'].includes(state.game)){const group=choices([[false,'Nein'],[true,'Ja ×2']],'tout');group.lastChild.onclick=()=>{state.tout=true;state.light=false;render()};root.append(section('Tout',group));}
     if(config.Light.enabled&&solo.includes(state.game)){const group=choices([[false,'Nein'],[true,'Ja ×2']],'light');group.lastChild.onclick=()=>{state.light=true;state.tout=false;render()};root.append(section('Light',group));}
     root.append(section('Ausgang',choices([[true,'Gewonnen'],[false,'Verloren']],'won')));
-    if(state.game==='Ramsch'&&config.Jungfrau.enabled&&!state.won){const group=el('div','choices');for(let i=0;i<4;i++){const b=option('Spieler '+(i+1),state.jungfrauen.includes(i),()=>state.jungfrauen=state.jungfrauen.includes(i)?state.jungfrauen.filter(x=>x!==i):[...state.jungfrauen,i]);b.disabled=i===state.seat;group.append(b)}root.append(section('Jungfrau · 0 Augen',group));} 
+    if(state.game==='Ramsch'&&config.Jungfrau.enabled){const group=el('div','choices');for(let i=0;i<4;i++){const b=option('Spieler '+(i+1),state.jungfrauen.includes(i),()=>state.jungfrauen=state.jungfrauen.includes(i)?state.jungfrauen.filter(x=>x!==i):[...state.jungfrauen,i]);b.disabled=state.won||i===state.seat;group.append(b)}const field=section('Jungfrau',group);field.append(el('small','muted',state.won?'Beim Alleingewinn mit 120 Punkten gilt keine Jungfrau-Verdopplung.':'Spieler mit 0 Punkten markieren.'));root.append(field);} 
 
     root.append(section('Ansage',choices([[1,'Ohne'],[2,'Kontra ×2'],[4,'Re ×4'],[8,'Sub ×8']],'announcement')));
     if(config.Legen.enabled){const group=el('div','choices');for(let n=1;n<=4;n++)group.append(option(String(n),state.laid===n,()=>state.laid=state.laid===n?0:n));const field=section('Leger',group);field.append(el('small','muted',state.laid?state.laid+' Leger: ×'+2**state.laid:'Keine Auswahl: ohne Leger'));root.append(field);}
