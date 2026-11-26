@@ -179,7 +179,7 @@
           for (const p of statistics(record))
             if (result.has(p.id))
               result.set(p.id, result.get(p.id) + p.points);
-      if (!st.closed)
+      if (!st.closed || st.settings?.target)
         for (const round of st.rounds)
           for (const p of round.results)
             if (result.has(p.id))
