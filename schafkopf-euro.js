@@ -21,8 +21,7 @@
     Geier: "Geier ist Trumpf.",
     Solo: "Geier, Wenz und eine gewünschte Farbe sind Trumpf.",
     Sau: "Man spielt mit der angesagten Farbsau zusammen.",
-    Bagga:
-      "Einzelspiel: Nur einen Stich machen. Trümpfe wie bei Bierkopf.",
+    Bagga: "Einzelspiel: Nur einen Stich machen. Trümpfe wie bei Bierkopf.",
     Spitz: "Bettel, der sofort aufgelegt wird.",
     Ramsch:
       "Die wenigsten Augen gewinnen. Wer 120 Augen hat, gewinnt ebenfalls. Standardbetrag 0,10 €. Der Verlierer zahlt an alle anderen; bei 120 Augen zahlen alle an den ausgewählten Gewinner.",
