@@ -18,6 +18,9 @@ async function snapshot(name,setup,options={}){
   // Production correctly forbids <base>. Root the local asset URLs explicitly
   // instead, so the unchanged CSP can remain active in these offline fixtures.
   doc.querySelectorAll('[src],[href]').forEach(n=>{for(const a of ['src','href']){const v=n.getAttribute(a);if(v&&!/^(?:[a-z]+:|\/|#)/i.test(v))n.setAttribute(a,'/'+v)}});
+  // Freeze current control properties into attributes for script-free screenshots.
+  doc.querySelectorAll('input').forEach(n=>{n.setAttribute('value',n.value);if(n.type==='checkbox'||n.type==='radio')n.toggleAttribute('checked',n.checked)});
+  doc.querySelectorAll('option').forEach(n=>n.toggleAttribute('selected',n.selected));
   fs.writeFileSync(path.join(output,name+'.html'),'<!doctype html>\n'+doc.documentElement.outerHTML);
  }finally{w.close()}
 }
