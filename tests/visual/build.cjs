@@ -39,5 +39,6 @@ async function snapshot(name,setup,options={}){
   await snapshot('game-'+({'21 rückwärts':'backwards',Schafkopf:'schafkopf',Krawallo:'krawallo',Bierkopf:'bierkopf',Schleifer:'schleifer',Schniffelkopf:'schniffelkopf',Klopfer:'klopfer'})[type],async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType(type)}, {longNames:type==='Krawallo'});
  await snapshot('krawallo-teams',async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.changeGameType('Krawallo');w.tab('people')},{longNames:true});
  await snapshot('schafkopf-settings',async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();w.tab('roomsettings')});
- console.log('Built 15 anonymous production-DOM fixtures without executable scripts.');
+ await snapshot('euro-frame',async w=>{await w.document.querySelector('.hh-room-card').onclick();await tick();await w.document.getElementById('hhEuroDummy').onclick()},{resetAdmin:true});
+ console.log('Built 16 anonymous production-DOM fixtures without executable scripts.');
 })().catch(e=>{console.error(e);process.exit(1)});

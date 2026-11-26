@@ -1,0 +1,9 @@
+/* Operator-only experiment; no game state is sent to this isolated frame. */
+#hhEuroDummy[hidden]{display:none!important}
+.hh-euro-dialog{width:min(960px,calc(100vw - 16px));height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);border:1px solid var(--border,#e5e3e8);border-radius:20px;padding:0;background:var(--panel,#fff);overflow:hidden}
+.hh-euro-dialog[open]{display:flex;flex-direction:column}
+.hh-euro-dialog::backdrop{background:#17131d80}
+.hh-euro-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border,#e5e3e8);flex-wrap:wrap}
+.hh-euro-dialog>header strong{font-size:16px}
+.hh-euro-dialog>header button{min-height:44px;font-size:13px}
+.hh-euro-dialog iframe{border:0;flex:1;width:100%;min-height:0;background:#f7f7fa}

@@ -1,11 +1,11 @@
-# Kartabend 49
+# Kartabend 50
 
 Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
 - **App nutzen:** [Nutzerhandbuch öffnen](nutzerhandbuch.html), [PDF](nutzerhandbuch.pdf). Alle Spielregeln, Einladungen und Einstellungen werden dort ohne Programmierkenntnisse erklärt.
 - **Code verstehen:** [Architektur](docs/ARCHITEKTUR.md) und [Entwicklung und Tests](docs/ENTWICKLUNG.md).
 - **Sicherheit und Kopierbarkeit:** [Prüfumfang und Grenzen](SECURITY.md).
-- **Aktueller Befund:** [Prüfung Version 49](Pruefung-Version49.md).
+- **Aktueller Befund:** [Prüfung Version 50](Pruefung-Version50.md).
 - **Einheitliche Bedienung:** [Gestaltungsregeln](docs/BEDIENUNG.md).
 
 ## Betrieb
@@ -27,3 +27,7 @@ Google Cast bleibt ohne öffentliche Receiver-App-ID deaktiviert. [Einrichtung](
 Die eigene Software unterliegt dem Urheberrecht von Bernd Dinkel. Enthaltene Fremdbibliotheken und deren Lizenzhinweise bleiben davon unberührt. Ein öffentliches Repository macht den Code technisch lesbar und innerhalb der GitHub-Regeln forkbar; es erteilt keine pauschale Erlaubnis zu beliebiger Weiterverwendung.
 
 Version 48 gleicht die Krawallo-Teamauswahl mit ausdrücklichem Teams-speichern-Button an die anderen Teamspiele an. Vier getrennte, flexible Profilspalten verhindern abgeschnittene Logos.
+
+## Schafkopf (€): erster Dummy
+
+Der zusätzliche Menüeintrag erscheint nur beim serverseitig freigegebenen Betreiberkonto Kolsbernd. Der isolierte Rechner verwendet anonyme Testspieler und speichert keine Geldspielstände. Regeln und Testgrenzen stehen im Nutzerhandbuch. `schafkopf-euro.js` rechnet intern mit ganzzahligen Viertelcent, damit die vorgegebenen Spitzenfaktoren und Salden ohne Rundung erhalten bleiben. Die statischen Dummy-Dateien sind kein vertraulicher Datenbereich; sie enthalten keine Konten oder Raumstände.

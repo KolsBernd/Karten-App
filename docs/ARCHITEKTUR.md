@@ -45,3 +45,9 @@ Die Trennung in Module ist begonnen, aber noch nicht abgeschlossen. Der große H
 `schafSettings.target` begrenzt eine Raumserie auf 1–50 Partien. Fehlt der Wert in Altdaten, bleibt das bisherige Einzelpartie-Verhalten bestehen. Der Server berechnet die Punkte und prüft den Abschluss gegen dieselbe Vorgabe. Abgeschlossene Serien werden für Statistiken mit `HHRoomGames.records` bzw. `hh_expand_extra_history` in einzelne Partien aufgeteilt; der gemeinsame Raumverlauf bleibt unverändert.
 
 Neuregistrierungsmeldungen entstehen nach bestätigter E-Mail bei der ersten Profilanlage. Ein eindeutiger Schlüssel verhindert doppelte Nachrichten. Empfänger ist die serverseitig festgelegte Betreiberkennung, kein vom Client übergebener Benutzername. Wiederholte Anmeldung und Profiländerungen erzeugen keine Meldung. Der Push enthält keine Kontaktdaten.
+
+## Schafkopf-Euro-Dummy (Version 50)
+
+Der Operator-Menüeintrag fragt vor dem Öffnen nochmals den bestehenden serverseitigen Berechtigungsstatus ab. Der Rechner läuft in einem Frame mit `sandbox="allow-scripts"`, ohne Zugriff auf Elternseite, Konten, lokalen Speicher oder Raumzustand. Seine CSP verbietet Netzwerkverbindungen. Die drei statischen Dummy-Dateien enthalten ausschließlich Testvorgaben. Sie sind als Frontend-Quelltext öffentlich, keine Zugriffssperre für vertrauliche Daten.
+
+`calculate` berechnet den Spielwert in ganzzahligen Viertelcent; `settlement` verteilt dieselbe Einheit mit Summe null. Die Anzeige konvertiert erst am Ende in Euro mit bis zu vier Nachkommastellen. Es gibt keinen Speicheraufruf für Geldspielstände und keine Überweisungsfunktion. Ein späterer echter Spielmodus benötigt eigenständige serverseitige Validierung und Datenmigrationen.
