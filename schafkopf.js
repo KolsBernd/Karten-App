@@ -264,7 +264,9 @@
           "p",
           "tt-running",
           options.room
-            ? "Partie erfasst."
+            ? model.target > 1
+              ? "Alle Partien dieser Serie sind abgeschlossen."
+              : "Partie erfasst."
             : "Alle Partien dieser Runde sind abgeschlossen.",
         ),
       );

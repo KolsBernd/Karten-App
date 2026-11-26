@@ -39,3 +39,9 @@ Das Ausblenden eines Buttons ist eine Bedienhilfe. Eine Berechtigung entsteht au
 ## Technische Schulden
 
 Die Trennung in Module ist begonnen, aber noch nicht abgeschlossen. Der große HTML-Einstiegspunkt, teilweise weiterhin sehr lange JavaScript-Zeilen (die gemeinsame Schafkopf-Erfassung wurde in Version 47 formatiert) und 41 nacheinander gewachsene Inline-Stilblöcke erschweren die Wartung. Die nächste Strukturarbeit sollte eine einzelne Zuständigkeit pro Schritt herauslösen. Eine gleichzeitige Komplettumschreibung wäre schwerer zuverlässig zu prüfen und verspricht ohne Messung keinen Geschwindigkeitsgewinn.
+
+## Schafkopf-Serien (Version 49)
+
+`schafSettings.target` begrenzt eine Raumserie auf 1–50 Partien. Fehlt der Wert in Altdaten, bleibt das bisherige Einzelpartie-Verhalten bestehen. Der Server berechnet die Punkte und prüft den Abschluss gegen dieselbe Vorgabe. Abgeschlossene Serien werden für Statistiken mit `HHRoomGames.records` bzw. `hh_expand_extra_history` in einzelne Partien aufgeteilt; der gemeinsame Raumverlauf bleibt unverändert.
+
+Neuregistrierungsmeldungen entstehen nach bestätigter E-Mail bei der ersten Profilanlage. Ein eindeutiger Schlüssel verhindert doppelte Nachrichten. Empfänger ist die serverseitig festgelegte Betreiberkennung, kein vom Client übergebener Benutzername. Wiederholte Anmeldung und Profiländerungen erzeugen keine Meldung. Der Push enthält keine Kontaktdaten.

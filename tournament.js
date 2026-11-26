@@ -302,11 +302,17 @@
     const gameHint = el('p', 'small muted');
     function switchGame(reset) {
       const schaf = game.value === 'Schafkopf';
+      const oldTarget = target.value, oldStages = stages.value;
+      for (const [field, maximum] of [[target, schaf ? 50 : 30], [stages, schaf ? 50 : 10]]) {
+        field.replaceChildren();
+        for (let n = 1; n <= maximum; n++) { const option = el('option', '', String(n)); option.value = String(n); field.append(option); }
+      }
+      target.value = oldTarget; stages.value = oldStages;
       variants.hidden = !schaf;
       colorLabel.hidden = !schaf;
       gameHint.textContent = schaf ? 'Jeder Eintrag ist eine Partie. Die Platznummer bestimmt bei Kreuzspiel die Partner 1 + 3 und 2 + 4.' : 'Eine Partie geht bis 21. Die Teams bleiben bis Rundenende zusammen.';
       if (reset) {
-        target.value = schaf ? '30' : '3';
+        target.value = schaf ? '32' : '3';
         stages.value = schaf ? '2' : '3';
       }
     }
@@ -525,7 +531,7 @@
           await openTableWithNotice(t);
         }, 'panel tt-overview-card');
       card.setAttribute('aria-label', 'Tisch ' + t.table_no + ' öffnen');
-      card.append(el('h3', '', 'Tisch ' + t.table_no), el('strong', 'tt-overview-total', String(points.reduce((a, b) => a + b, 0))), el('small', 'muted', 'Spielerpunkte insgesamt'), el('p', 'tt-overview-seats', points.join(' \u2013 ')), el('p', 'tt-status' + (!t.done && active.status === 'running' ? ' tt-running' : ''), t.done ? 'Runde beendet' : active.status === 'running' ? 'Spielt noch' : 'Beendet'));
+      card.append(el('h3', '', 'Tisch ' + t.table_no), el('p', 'tt-table-progress', (t.games?.length || 0) + ' von ' + active.settings.target + ' Spielen'), el('strong', 'tt-overview-total', String(points.reduce((a, b) => a + b, 0))), el('small', 'muted', 'Spielerpunkte insgesamt'), el('p', 'tt-overview-seats', points.join(' \u2013 ')), el('p', 'tt-status' + (!t.done && active.status === 'running' ? ' tt-running' : ''), t.done ? 'Runde beendet' : active.status === 'running' ? 'Spielt noch' : 'Beendet'));
       grid.append(card);
     }
     root.append(grid);
@@ -563,6 +569,7 @@
       actions.append(...controls);
       card.append(actions);
     }
+    card.append(el('p', 'tt-table-progress', (t.games?.length || 0) + ' von ' + active.settings.target + ' Spielen'));
     if (!t.done)
       return card;
     const disclosure = el('details', 'panel tt-completed-table');

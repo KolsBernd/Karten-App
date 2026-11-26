@@ -28,7 +28,7 @@
               type: 'Klopfer',
               kl
             });
-        for(const extra of session.extraHistory||[])if(extra.closed)rows.push({type:extra.gameType,extra});
+        for(const extra of session.extraHistory||[])if(extra.closed)for(const entry of window.HHRoomGames.records(extra))rows.push({type:entry.gameType,extra:entry});
       }
       return rows;
     }

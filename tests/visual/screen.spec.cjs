@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-for(const name of ['login','registration','lobby','settings','profile','request-form','game-bierkopf','game-schleifer','game-schniffelkopf','game-klopfer','game-backwards','game-schafkopf','game-krawallo','krawallo-teams'])test(name,async({page},info)=>{
+for(const name of ['login','registration','lobby','settings','profile','request-form','game-bierkopf','game-schleifer','game-schniffelkopf','game-klopfer','game-backwards','game-schafkopf','game-krawallo','krawallo-teams','schafkopf-settings'])test(name,async({page},info)=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
  await page.goto('/fixtures/'+name+'.html');await page.evaluate(()=>document.fonts.ready);
@@ -24,5 +24,7 @@ for(const name of ['login','registration','lobby','settings','profile','request-
   const nav=page.locator('#hhLobbyNav:visible,.bottom-nav:visible,#hhTournamentPlayNav:visible').first();await expect(nav).toBeVisible();
   const before=await nav.boundingBox();await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));const after=await nav.boundingBox();expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(2);expect(Math.abs(after.y+after.height-metrics.height)).toBeLessThanOrEqual(2);
  }
- await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:info.outputPath(name+'.png'),fullPage:true});
+ if(name==='schafkopf-settings')await expect(page.locator('#hhRoomSchafTarget')).toBeVisible();
+ await page.evaluate(()=>window.scrollTo(0,0));
+ await page.screenshot({path:info.outputPath(name+'.png'),fullPage:true});
 });

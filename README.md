@@ -1,11 +1,11 @@
-# Kartabend 48
+# Kartabend 49
 
 Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
 - **App nutzen:** [Nutzerhandbuch öffnen](nutzerhandbuch.html), [PDF](nutzerhandbuch.pdf). Alle Spielregeln, Einladungen und Einstellungen werden dort ohne Programmierkenntnisse erklärt.
 - **Code verstehen:** [Architektur](docs/ARCHITEKTUR.md) und [Entwicklung und Tests](docs/ENTWICKLUNG.md).
 - **Sicherheit und Kopierbarkeit:** [Prüfumfang und Grenzen](SECURITY.md).
-- **Aktueller Befund:** [Prüfung Version 47](Pruefung-Version48.md).
+- **Aktueller Befund:** [Prüfung Version 49](Pruefung-Version49.md).
 - **Einheitliche Bedienung:** [Gestaltungsregeln](docs/BEDIENUNG.md).
 
 ## Betrieb

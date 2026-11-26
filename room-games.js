@@ -61,6 +61,12 @@
       date: new Date().toISOString()
     };
   }
+  // A room series stays one immutable history item, but each Schafkopf hand
+  // remains one game in personal/global statistics, just as at tournament tables.
+  function records(record) {
+    if (record.gameType !== 'Schafkopf' || (record.rounds?.length || 0) < 2) return [record];
+    return record.rounds.map((round, i) => ({...record, id: String(record.id) + ':' + i, date: round.date || record.date, rounds: [round]}));
+  }
   function statistics(record) {
     if (record.gameType === 'Krawallo') return window.HHKrawallo.statistics(record);
     if (record.gameType === '21 rückwärts') {
@@ -71,7 +77,9 @@
         won: p.points === best
       }));
     }
-    const scores = record.rounds?.[0]?.results || [];
+    const totals = new Map((record.players || []).map(id => [id, 0]));
+    for (const round of record.rounds || []) for (const p of round.results || []) totals.set(p.id, (totals.get(p.id) || 0) + p.points);
+    const scores = [...totals].map(([id, points]) => ({id, points}));
     const best = Math.max(0, ...scores.map(p => p.points));
     return scores.map(p => ({
       id: p.id,
@@ -166,12 +174,12 @@
         id,
         0
       ]));
-      for (const record of c.session().extraHistory || [])
+      for (const record of (st.settings?.target ? [] : c.session().extraHistory || []))
         if (record.gameType === 'Schafkopf')
           for (const p of statistics(record))
             if (result.has(p.id))
               result.set(p.id, result.get(p.id) + p.points);
-      if (!st.closed)
+      if (!st.closed || st.settings?.target)
         for (const round of st.rounds)
           for (const p of round.results)
             if (result.has(p.id))
@@ -358,20 +366,23 @@
         ...c.people().find(p => p.id === id),
         name: c.name(id)
       }));
+      const target = Number(st.settings?.target || 1);
+      let running = st.players.map(() => 0);
+      const games = st.rounds.map(r => {
+        const awards = st.players.map(id => r.results.find(p => p.id === id)?.points || 0);
+        running = running.map((n, i) => n + awards[i]);
+        return {scores: awards, total_scores: [...running], rounds: [r], winners: awards.flatMap((n, i) => n > 0 ? [i] : [])};
+      });
       const model = {
         table_id: 'room:' + c.room() + ':' + st.id,
         title: c.title(),
         people,
         schaf_scores: scores(st).map(p => p.points),
-        schaf_games: st.rounds.map(r => ({
-          scores: r.results.map(p => p.points),
-          rounds: [r],
-          winners: r.results.flatMap((p, i) => p.points > 0 ? [i] : [])
-        })),
+        schaf_games: games,
         allowed_games: st.settings.variants,
         capture_colors: st.settings.capture_colors,
         started_at: c.session().date,
-        target: 1,
+        target,
         done: st.closed
       };
       window.HHSchafkopf.render(model, async (action, body) => {
@@ -388,7 +399,7 @@
           awards,
           date: new Date().toISOString()
         });
-        finish(st);
+        if (st.rounds.length >= target) finish(st); else c.save();
       }, {
         confirm: c.confirm,
         room: true
@@ -400,7 +411,7 @@
       if (!st.rounds.length)
         gameRoot.querySelector('.tt-schaf-scoring').append(roster(st, true));
       if (st.closed)
-        gameRoot.prepend(button('Nächste Partie', () => newGame(st), 'primary hh-wide-button'));
+        gameRoot.prepend(button(st.settings?.target ? 'Neue Schafkopf-Serie' : 'Nächste Partie', () => newGame(st), 'primary hh-wide-button'));
     }
     function renderSettings() {
       settings.replaceChildren(el('h2', '', 'Schafkopfeinstellungen'));
@@ -418,6 +429,13 @@
         return;
       }
       const form = el('form');
+      const targetLabel = el('label', 'hh-schaf-target', 'Anzahl Partien');
+      const target = el('select'); target.id = 'hhRoomSchafTarget';
+      target.setAttribute('aria-label', 'Anzahl Schafkopf-Partien');
+      for (let n = 1; n <= 50; n++) { const option = el('option', '', n); option.value = String(n); target.append(option); }
+      target.value = String(editing.target || 1);
+      target.onchange = () => editing.target = Number(target.value);
+      targetLabel.append(target); form.append(targetLabel);
       const map = new Map();
       for (const type of [...defaultSettings().variants.filter(v => v !== 'Tout'), 'Bettel', 'Tout']) {
         const label = el('label', 'hh-check'), input = el('input');
@@ -456,6 +474,7 @@
             throw Error('Mindestens ein Spiel wählen.');
           c.session().schafSettings = {
             variants,
+            target: Number(target.value),
             capture_colors: colors.checked
           };
           if (current && !current.rounds.length)
@@ -550,7 +569,7 @@
       }
     };
   }
-  window.HHRoomGames = {
+  window.HHRoomGames = {records,
     create,
     statistics,
     backwards,
