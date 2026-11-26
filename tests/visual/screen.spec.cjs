@@ -26,6 +26,6 @@ for(const name of ['login','registration','lobby','settings','profile','request-
  }
  if(name==='schafkopf-settings')await expect(page.locator('#hhRoomSchafTarget')).toBeVisible();
  await page.evaluate(()=>window.scrollTo(0,0));
- if(['schafkopf-settings','game-schafkopf'].includes(name)){const data=(await (name==='schafkopf-settings'?page.locator('#hhRoomSchafSettings').screenshot({type:'jpeg',quality:80}):page.screenshot({type:'jpeg',quality:70,fullPage:true}))).toString('base64');for(let i=0;i<data.length;i+=6000)console.log('PREVIEW49|'+name+'|'+info.project.name+'|'+i+'|'+data.slice(i,i+6000));}
+ if(['schafkopf-settings','game-schafkopf'].includes(name)){if(name==='schafkopf-settings')await page.locator('#hhNavigationHost').evaluate(n=>n.style.visibility='hidden');const data=(await (name==='schafkopf-settings'?page.locator('#hhRoomSchafSettings').screenshot({type:'jpeg',quality:80}):page.screenshot({type:'jpeg',quality:70,fullPage:true}))).toString('base64');for(let i=0;i<data.length;i+=6000)console.log('PREVIEW49|'+name+'|'+info.project.name+'|'+i+'|'+data.slice(i,i+6000));if(name==='schafkopf-settings')await page.locator('#hhNavigationHost').evaluate(n=>n.style.visibility='');}
  await page.screenshot({path:info.outputPath(name+'.png'),fullPage:true});
 });
