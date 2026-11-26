@@ -2,7 +2,7 @@ const {boot,tick}=require('./app-fixture.cjs');
 const assert=require('node:assert/strict');
 (async()=>{
  const {w}=await boot();await w.document.querySelector('.hh-room-card').onclick();await tick();
- const session=w.eval('s()');session.schafSettings={variants:['Solo','Sau','Tout'],capture_colors:false,target:3};
+ w.tab('roomsettings');await tick();const initialTarget=w.document.getElementById('hhRoomSchafTarget');initialTarget.value='3';initialTarget.dispatchEvent(new w.Event('change'));initialTarget.closest('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await tick();await tick();
  w.changeGameType('Schafkopf');await tick();await tick();
  const api=w.HHRoomGames,record={id:49,gameType:'Schafkopf',players:[1,2,3,4],closed:true,rounds:[{results:[{id:1,points:6},{id:2,points:0},{id:3,points:0},{id:4,points:0}]},{results:[{id:1,points:0},{id:2,points:6},{id:3,points:0},{id:4,points:0}]},{results:[{id:1,points:6},{id:2,points:0},{id:3,points:0},{id:4,points:0}]}]};
  assert.equal(api.records(record).length,3);assert.deepEqual(Array.from(api.statistics(record),p=>p.points),[12,6,0,0]);assert.equal(api.records({...record,gameType:'Krawallo'}).length,1);
