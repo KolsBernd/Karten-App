@@ -13,3 +13,5 @@ Die Menüfreigabe ist von Verwaltungs- und globalen Rücksetzrechten getrennt. Y
 ## Dokumentation und Grenzen
 
 Handbuch und Datenschutz auf Version 53 aktualisiert. Geänderte Seiten werden gerendert und visuell geprüft; anonyme Anmeldeaufnahme wird erneuert. Offline-Cache und ZIP enthalten Dokumente und Bilder. Diese Entwicklungsprüfung ist kein unabhängiges Sicherheitsgutachten. Live-Anmeldung mit echten Zugangsdaten und reale Endgeräte sind nicht Bestandteil der isolierten Tests.
+
+Der WebKit-Vergleich deckte zudem eine Abweichung des bisherigen HTTP-Testservers auf: Die produktive Sicherheitsrichtlinie wertete seine unverschlüsselten Programmdateien auf, sodass sie dort nicht geladen wurden. Der isolierte Testserver verwendet nun wie die App HTTPS mit einem ausschließlich lokalen, kurzlebigen Testzertifikat. Die produktive HTTPS-/Zertifikatsprüfung und Sicherheitsrichtlinie bleiben unverändert.

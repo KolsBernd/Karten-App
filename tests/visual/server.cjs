@@ -1,7 +1,13 @@
 // Loopback only; the fixture service has no route for backend writes or secrets.
-const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const https=require('node:https'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{execFileSync}=require('node:child_process');
 const root=process.cwd(),fixtures=path.join(root,'tests/visual/fixtures');
-http.createServer((req,res)=>{
+// WebKit upgrades insecure scripts under the production CSP. Serve the fixture
+// over HTTPS too; only this ephemeral loopback certificate is trusted by tests.
+const certDir=fs.mkdtempSync(path.join(os.tmpdir(),'kartabend-test-https-'));
+const key=path.join(certDir,'key.pem'),cert=path.join(certDir,'cert.pem');
+execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',key,'-out',cert,'-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost,IP:127.0.0.1'],{stdio:'ignore'});
+process.on('exit',()=>fs.rmSync(certDir,{recursive:true,force:true}));
+https.createServer({key:fs.readFileSync(key),cert:fs.readFileSync(cert)},(req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
  const base=pathname.startsWith('/fixtures/')?fixtures:root;
  const relative=pathname.startsWith('/fixtures/')?pathname.slice(10):pathname.slice(1);
