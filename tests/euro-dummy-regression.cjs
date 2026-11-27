@@ -30,7 +30,7 @@ async function openRoom(f){await f.w.document.querySelector('.hh-room-card').onc
   const f=await boot({canonicalUsername:name,resetAdmin:admin,tournamentCreator:creator,euroWriter:allowed});await openRoom(f);const {w}=f;const b=w.document.getElementById('hhEuroDummy');assert.equal(b.hidden,!allowed);assert.equal(!!w.document.getElementById('hhEuroDummyDialog'),false);
   await b.onclick();await tick();const host=w.document.getElementById('hhEuroRoom');assert(host.shadowRoot);assert.equal(host.classList.contains('hide'),!allowed);
   assert.equal(w.document.getElementById('hhAdminResetPanel').classList.contains('hide'),!admin);
-  if(allowed){const before=w.eval('JSON.stringify(data)');const view=host.shadowRoot;assert(find(view,'Einstellungen'));await find(view,'Partie eintragen').onclick();assert(!find(view,'Einstellungen'));assert.equal(w.eval('JSON.stringify(data)'),before);assert(!f.calls.some(c=>c.name==='hh_update_state'));
+  if(allowed){const before=JSON.stringify(f.getPayload());const view=host.shadowRoot;assert(find(view,'Einstellungen'));await find(view,'Partie eintragen').onclick();assert(!find(view,'Einstellungen'));assert.equal(JSON.stringify(f.getPayload()),before);assert(!f.calls.some(c=>c.name==='hh_update_state'));
    const finish=find(view,'Abrechnung').onclick();await tick();w.document.getElementById('hhConfirmNo').click();await finish;assert.equal(f.getEuro().state().current.closed,false);
    const yes=find(view,'Abrechnung').onclick();await tick();w.document.getElementById('hhConfirmYes').click();await yes;assert.equal(f.getEuro().state().current.closed,true);assert(find(view,'Einstellungen'));assert.equal(f.getEuro().state().current.transfers.length,3);
   }w.close();

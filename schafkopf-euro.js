@@ -654,11 +654,21 @@
       };
       const td = el("td");
       td.append(enabled);
-      const gameName=el("th"),label=el("span","settings-game");
-      if(icons[name]){const image=el("img");image.src=icons[name].includes("/")?icons[name]:"cards/"+icons[name]+".svg";image.alt="";label.append(image);}
-      label.append(document.createTextNode(name));gameName.append(label);
-      if(name==="Jungfrau")gameName.append(el("small","muted","Nur bei Ramsch"));
-      tr.append(td,gameName);
+      const gameName = el("th"),
+        label = el("span", "settings-game");
+      if (icons[name]) {
+        const image = el("img");
+        image.src = icons[name].includes("/")
+          ? icons[name]
+          : "cards/" + icons[name] + ".svg";
+        image.alt = "";
+        label.append(image);
+      }
+      label.append(document.createTextNode(name));
+      gameName.append(label);
+      if (name === "Jungfrau")
+        gameName.append(el("small", "muted", "Nur bei Ramsch"));
+      tr.append(td, gameName);
       const price = el("td");
       if (cfg.cents !== null) {
         const input = el("input");
