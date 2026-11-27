@@ -17,7 +17,7 @@ test('Euro-Dummy bleibt vom Konto und Raum getrennt',async({page})=>{await page.
 test('Ramsch mit Jungfrau und Alleingewinn',async({page})=>{await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());await page.goto('/schafkopf-euro.html');await page.locator('#settingsOpen').click();await page.getByRole('checkbox',{name:'Ramsch freigeben',exact:true}).check();await expect(page.getByRole('checkbox',{name:'Kreuzspiel freigeben',exact:true})).not.toBeChecked();await expect(page.getByRole('textbox',{name:'Ramsch Betrag in Euro',exact:true})).toHaveValue('0,10');await page.getByRole('button',{name:'Einstellungen speichern',exact:true}).click();await page.getByRole('button',{name:'Ramsch',exact:true}).click();await page.getByRole('button',{name:'Verloren',exact:true}).click();await page.getByRole('button',{name:'Spieler 2',exact:true}).click();await page.locator('#save').click();await expect(page.locator('[data-balance="0"]')).toContainText('-0,40');await expect(page.locator('[data-balance="1"]')).toContainText('0,20');await page.getByRole('button',{name:'Gewonnen',exact:true}).click();await expect(page.getByRole('button',{name:'Spieler 2',exact:true})).toBeDisabled();await page.locator('#save').click();await expect(page.locator('[data-balance="0"]')).toContainText('-0,10');await expect(page.locator('[data-balance="1"]')).toContainText('0,10');});
 
 test('Tout Light Bettel und Karten-Spitzen',async({page},info)=>{
- await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());await page.goto('/schafkopf-euro.html');const amount=page.locator('#amount');const special=page.locator('.field').filter({has:page.getByRole('heading',{name:'Tout & Light',exact:true})});
+ await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());await page.goto('/schafkopf-euro.html');const amount=page.locator('#amount');const special=page.locator('.field').filter({has:page.getByRole('heading',{name:/^Tout(?: & Light)?$/})});
  await expect(special.getByRole('button')).toHaveText(['Nein','Tout','Light']);await page.getByRole('button',{name:'Durch',exact:true}).click();await expect(amount).toContainText('0,30');await special.getByRole('button',{name:'Tout',exact:true}).click();await expect(amount).toContainText('0,40');await expect(page.getByRole('heading',{name:'Spielergebnis',exact:true})).toHaveCount(0);await expect(page.getByRole('heading',{name:'Spitzen',exact:true})).toBeVisible();
  await special.getByRole('button',{name:'Light',exact:true}).click();await expect(amount).toContainText('0,40');await expect(page.getByRole('heading',{name:'Spitzen',exact:true})).toHaveCount(0);await special.getByRole('button',{name:'Nein',exact:true}).click();await expect(page.getByRole('heading',{name:'Spielergebnis',exact:true})).toBeVisible();
  for(const [game,price] of [['Bettel','0,225'],['Bagga','0,60']]){await page.getByRole('button',{name:game,exact:true}).click();await expect(special.getByRole('button')).toHaveText(['Nein','Tout']);await expect(page.getByRole('heading',{name:'Spitzen',exact:true})).toHaveCount(0);await special.getByRole('button',{name:'Tout',exact:true}).click();await expect(amount).toContainText(price);await expect(page.getByRole('heading',{name:'Spielergebnis',exact:true})).toHaveCount(0);}
@@ -33,11 +33,25 @@ test('Klopfer und grüne Jungfrau-Porträts',async({page},info)=>{
 });
 
 // Published documentation uses the same local assets as the app shell.
-test('Handbuch 51, Dokumente und Rückweg',async({page,request})=>{
+test('Handbuch 52, Dokumente und Rückweg',async({page,request})=>{
  await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
- await page.goto('/nutzerhandbuch.html');await expect(page.locator('meta[name=handbook-version]')).toHaveAttribute('content','51');await expect(page.locator('header a[href="index.html"]')).toBeVisible();await expect(page.locator('header a[download]')).toHaveCount(1);
- for(const img of ['schafkopf-euro-51.jpg','schafkopf-euro-einstellungen-51.jpg','schafkopf-euro-ramsch-51.jpg']){const response=await request.get('/handbuch/'+img);expect(response.ok()).toBe(true)}
+ await page.goto('/nutzerhandbuch.html');await expect(page.locator('meta[name=handbook-version]')).toHaveAttribute('content','52');await expect(page.locator('header a[href="index.html"]')).toBeVisible();await expect(page.locator('header a[download]')).toHaveCount(1);
+ for(const img of ['schafkopf-euro-52.jpg','schafkopf-euro-einstellungen-52.jpg','schafkopf-euro-ramsch-52.jpg']){const response=await request.get('/handbuch/'+img);expect(response.ok()).toBe(true)}
  await page.goto('/nutzerhandbuch.html#embedded');await expect(page.locator('header')).toBeHidden();
  for(const file of ['nutzerhandbuch.pdf','datenschutz.pdf']){const response=await request.get('/'+file);expect(response.ok()).toBe(true);expect(response.headers()['content-type']).toBe('application/pdf');expect((await response.body()).subarray(0,4).toString()).toBe('%PDF')}
- await page.goto('/datenschutz.html');await expect(page.locator('body')).toContainText('Version 51.0');expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(()=>innerWidth+2));
+ await page.goto('/datenschutz.html');await expect(page.locator('body')).toContainText('Version 52.0');expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(()=>innerWidth+2));
+});
+
+// Keep compact labels, no accidental defaults and actual SVG/embedded-image loading.
+test('Freigegebene Spielsymbole und kompakte Kategorien',async({page},info)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());await page.goto('/schafkopf-euro.html');
+ const field=name=>page.locator('.field').filter({has:page.getByRole('heading',{name,exact:true})});
+ await expect(field('Leger').locator('[aria-pressed=true]')).toHaveCount(0);await expect(field('Ansage').getByRole('button')).toHaveText(['Ohne','Kontra','Re','Sub']);
+ for(const game of ['King','Wenz','Geier','Solo','Sau','Bagga','Bettel','Spitz']){const b=page.getByRole('button',{name:game,exact:true});await expect(b.locator('img')).toHaveAttribute('src','cards/euro-'+game.toLowerCase()+'.svg');expect(await b.locator('img').evaluate(i=>i.complete&&i.naturalWidth>0)).toBe(true);const response=await page.request.get('/cards/euro-'+game.toLowerCase()+'.svg');const svg=await response.text();expect(svg).toContain('data:image/png;base64,');expect((svg.match(/<image /g)||[]).length).toBe(['Solo','Sau','Spitz'].includes(game)?4:game==='Bagga'?2:1)}
+ await page.getByRole('button',{name:'Durch',exact:true}).click();await page.getByRole('button',{name:'Kontra',exact:true}).click();await expect(page.locator('#amount')).toContainText('0,60');
+ for(const [game,value]of [['Spitz','0,80'],['Bagga','0,60'],['Bettel','0,30']]){await page.getByRole('button',{name:game,exact:true}).click();await expect(field('Spielergebnis')).toHaveCount(0);await expect(page.locator('#amount')).toContainText(value);if(game!=='Spitz'){await expect(field('Tout')).toHaveCount(1);await expect(field('Tout').getByRole('button')).toHaveText(['Nein','Tout'])}}
+ await page.getByRole('button',{name:'Solo',exact:true}).click();await page.getByRole('button',{name:'Ohne',exact:true}).click();await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:info.outputPath('euro-52.png'),fullPage:true});
+ 
+ await page.locator('#settingsOpen').click();
+ expect(errors).toEqual([]);
 });
