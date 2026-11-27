@@ -51,3 +51,11 @@ Neuregistrierungsmeldungen entstehen nach bestätigter E-Mail bei der ersten Pro
 Der Operator-Menüeintrag fragt vor dem Öffnen nochmals den bestehenden serverseitigen Berechtigungsstatus ab. Der Rechner läuft in einem Frame mit `sandbox="allow-scripts"`, ohne Zugriff auf Elternseite, Konten, lokalen Speicher oder Raumzustand. Seine CSP verbietet Netzwerkverbindungen. Die drei statischen Dummy-Dateien enthalten ausschließlich Testvorgaben. Sie sind als Frontend-Quelltext öffentlich, keine Zugriffssperre für vertrauliche Daten.
 
 `calculate` berechnet den Spielwert in ganzzahligen Viertelcent; `settlement` verteilt dieselbe Einheit mit Summe null. Die Anzeige konvertiert erst am Ende in Euro mit bis zu vier Nachkommastellen. Es gibt keinen Speicheraufruf für Geldspielstände und keine Überweisungsfunktion. Ein späterer echter Spielmodus benötigt eigenständige serverseitige Validierung und Datenmigrationen.
+
+## Euro-Dummy: Sonderregeln (Version 51)
+
+`schafkopf-euro.js` hält Berechnung und Darstellung getrennt. `calculate` prüft die Regelgültigkeit unabhängig von der sichtbaren Auswahl: Tout/Light ignorieren Schneider und Durch; Light ignoriert Spitzen. Bettel-Tout verwendet den Faktor 1,5, Bagga und Bettel verbieten Light. Ramsch-Klopfer sind eine einzelne Stufe von 0 bis 4, nur bei Ramsch wirksam; Leger und Ansage multiplizieren unabhängig davon.
+
+Die zwölf PNG-Karten sind technisch verkleinerte Vorlagen, keine extern geladenen Bilder. Die Zuordnung A–D bleibt Eichel/Gras/Herz/Schellen. Bildbuttons erhalten zugängliche Kartennamen. Das Jungfrau-Porträt markiert die Auswahl ausdrücklich grün.
+
+Die Änderungen erweitern keine Datenübertragung, Sichtbarkeit oder Speicherung. Der isolierte Dummy erhält weiterhin nur anonyme Testspieler und verwirft seine Werte beim Schließen. Reale Euro-Spielstände sind nicht implementiert.
