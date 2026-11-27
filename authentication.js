@@ -6,7 +6,7 @@
   function create(c) {
     async function login() {
       if (!c.client)
-        throw Error('Verbindung noch nicht bereit.');
+        throw Error('Der Anmeldedienst konnte nicht geladen werden. Bitte die App neu laden und die Internetverbindung prüfen.');
       const username = c.validUsername(c.$('hhUsername').value), password = c.$('hhPassword').value;
       if (!password)
         throw Error('Bitte Passwort eingeben.');
