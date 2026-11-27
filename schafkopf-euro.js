@@ -25,9 +25,9 @@
     Spitz: "Bettel, der sofort aufgelegt wird.",
     Ramsch:
       "Die wenigsten Augen gewinnen. Wer 120 Augen hat, gewinnt ebenfalls. Standardbetrag 0,10 €. Der Verlierer zahlt an alle anderen; bei 120 Augen zahlen alle an den ausgewählten Gewinner.",
-    Tout: "Kein Stich darf herausgehen; bei Bagga und Bettel nach der ersten Karte auflegen.",
+    Tout: "Kein Stich darf herausgehen; bei Bagga und Bettel nach der ersten Karte auflegen. Tout zählt ×2, bei Bettel ×1,5. Schneider und Durch zählen nicht zusätzlich.",
     Light:
-      "Bei King, Wenz, Geier oder Solo muss genau ein Stich herausgehen. Im Dummy alternativ zu Tout.",
+      "Bei King, Wenz, Geier oder Solo muss genau ein Stich herausgehen. Alternativ zu Tout. Light zählt ×2 ohne Spitzen und ohne Zuschläge für Schneider oder Durch.",
     Jungfrau:
       "Bei Ramsch erhält ein Spieler mit 0 Augen den doppelten Betrag. Im Dummy werden die Empfänger mit 0 Augen ausdrücklich markiert; beim Gewinn mit 120 Augen gilt keine Jungfrau-Verdopplung.",
     Legen:
@@ -93,26 +93,27 @@
       throw Error("Betrag zwischen 0 und 1.000 Euro eingeben.");
     return n;
   }
-  const spikesAllowed = (game) =>
-    !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch"].includes(game);
+  const spikesAllowed = (game, light = false) =>
+    !light && !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch", "Bettel"].includes(game);
   function calculate(config, input) {
     if (!games.includes(input.game) || !config[input.game]?.enabled)
       throw Error("Dieses Spiel ist nicht freigegeben.");
     const c = config[input.game].cents;
     if (!Number.isSafeInteger(c) || c < 0 || c > 100000)
       throw Error("Ungültiger Grundbetrag.");
-    const key = spikesAllowed(input.game)
+    const key = spikesAllowed(input.game, input.light)
       ? [...new Set(input.spikes || [])].sort().join("")
       : "";
     const factors = { "": 4, A: 4, AB: 6, ABC: 7, ABCD: 8, CD: 7, D: 8 };
     if (!/^[ABCD]*$/.test(key)) throw Error("Ungültige Spitzenwahl.");
     const spikeFactor = factors[key] ?? 4;
-    if (!["normal", "schneider", "durch"].includes(input.result))
-      throw Error("Spielergebnis wählen.");
-    if (input.result !== "normal" && !config.Schneider.enabled)
-      throw Error("Schneider ist nicht freigegeben.");
-    if (input.result === "durch" && !config.Durch.enabled)
-      throw Error("Durch ist nicht freigegeben.");
+    // Hidden result fields never contribute to Tout, Light or Ramsch.
+    const usesResult = input.game !== "Ramsch" && !input.tout && !input.light;
+    if (usesResult) {
+      if (!["normal", "schneider", "durch"].includes(input.result)) throw Error("Spielergebnis wählen.");
+      if (input.result !== "normal" && !config.Schneider.enabled) throw Error("Schneider ist nicht freigegeben.");
+      if (input.result === "durch" && !config.Durch.enabled) throw Error("Durch ist nicht freigegeben.");
+    }
     if (input.tout && input.light)
       throw Error("Tout und Light sind im Dummy alternativ wählbar.");
     if (
@@ -132,16 +133,13 @@
       throw Error("Ungültiger Multiplikator.");
     if (input.laid && !config.Legen.enabled)
       throw Error("Legen ist nicht freigegeben.");
-    const bonus =
-      input.game === "Ramsch"
-        ? 0
-        : (input.result === "normal" ? 0 : config.Schneider.cents) +
-          (input.result === "durch" ? config.Durch.cents : 0);
+    const knockers = input.game === "Ramsch" ? (input.knockers ?? 0) : 0;
+    if (!Number.isInteger(knockers) || knockers < 0 || knockers > 4) throw Error("Klopfer: 0 bis 4 wählen.");
+    const bonus = usesResult ? (input.result === "normal" ? 0 : config.Schneider.cents) + (input.result === "durch" ? config.Durch.cents : 0) : 0;
     let quarters = c * spikeFactor + bonus * 4;
-    const multiplier =
-      (input.tout || input.light ? 2 : 1) *
-      input.announcement *
-      2 ** input.laid;
+    // Bettel has no Spitzen/bonuses with Tout, so ×1.5 stays exact in quarter-cents.
+    const specialMultiplier = input.tout ? (input.game === "Bettel" ? 1.5 : 2) : input.light ? 2 : 1;
+    const multiplier = specialMultiplier * input.announcement * 2 ** input.laid * 2 ** knockers;
     quarters *= multiplier;
     if (!Number.isSafeInteger(quarters)) throw Error("Spielwert ist zu groß.");
     return {
@@ -152,6 +150,7 @@
       spikeQuarters: spikeFactor,
       bonus,
       multiplier,
+      knockers,
       fractionalCent: quarters % 4 !== 0,
     };
   }
@@ -242,6 +241,7 @@
       won: true,
       announcement: 1,
       laid: 0,
+      knockers: 0,
     };
   function option(label, pressed, run, icon) {
     const b = el("button", "choice");
@@ -249,7 +249,7 @@
     b.setAttribute("aria-pressed", String(pressed));
     if (icon) {
       const im = el("img");
-      im.src = "cards/" + icon + ".svg";
+      im.src = icon.includes("/") ? icon : "cards/" + icon + ".svg";
       im.alt = "";
       b.append(im);
     }
@@ -322,6 +322,7 @@
           state.spikes = [];
           state.jungfrauen = [];
           state.result = "normal";
+          state.knockers = 0;
           state.team = ["Sau", "Kreuzspiel"].includes(game)
             ? [state.seat ?? 0]
             : [];
@@ -333,16 +334,17 @@
       variants.append(b);
     }
     root.append(section("Spiel", variants));
-    if (spikesAllowed(state.game)) {
+    if (spikesAllowed(state.game, state.light)) {
       const group = el("div", "choices spikes");
-      for (const letter of ["A", "B", "C", "D"])
-        group.append(
-          option(letter, state.spikes.includes(letter), () => {
-            state.spikes = state.spikes.includes(letter)
-              ? state.spikes.filter((x) => x !== letter)
-              : [...state.spikes, letter];
-          }),
-        );
+      const suits = {A:"Eichel", B:"Gras", C:"Herz", D:"Schellen"};
+      for (const letter of ["A", "B", "C", "D"]) {
+        const family = state.game === "King" ? "king" : ["Solo", "Geier"].includes(state.game) ? "ober" : state.game === "Wenz" ? "unter" : null, suit = suits[letter];
+        const b = option(family ? "" : letter, state.spikes.includes(letter), () => {
+          state.spikes = state.spikes.includes(letter) ? state.spikes.filter(x => x !== letter) : [...state.spikes,letter];
+        }, family ? "cards/" + family + "-" + suit.toLowerCase() + ".png" : undefined);
+        if (family) { const name = suit + (family === "king" ? "-König" : family === "ober" ? "-Ober" : "-Unter"); b.setAttribute("aria-label", name); b.title = name + " (" + letter + ")"; b.classList.add("spike-card"); }
+        group.append(b);
+      }
       root.append(section("Spitzen", group));
     }
     const results = choices(
@@ -356,39 +358,16 @@
     results.children[1].disabled = !config.Schneider.enabled;
     results.children[2].disabled =
       !config.Schneider.enabled || !config.Durch.enabled;
-    if (state.game !== "Ramsch") root.append(section("Spielergebnis", results));
-    if (
-      config.Tout.enabled &&
-      [...solo, "Bagga", "Bettel"].includes(state.game)
-    ) {
-      const group = choices(
-        [
-          [false, "Nein"],
-          [true, "Ja ×2"],
-        ],
-        "tout",
-      );
-      group.lastChild.onclick = () => {
-        state.tout = true;
-        state.light = false;
-        render();
-      };
-      root.append(section("Tout", group));
-    }
-    if (config.Light.enabled && solo.includes(state.game)) {
-      const group = choices(
-        [
-          [false, "Nein"],
-          [true, "Ja ×2"],
-        ],
-        "light",
-      );
-      group.lastChild.onclick = () => {
-        state.light = true;
-        state.tout = false;
-        render();
-      };
-      root.append(section("Light", group));
+    if (state.game !== "Ramsch" && !state.tout && !state.light) root.append(section("Spielergebnis", results));
+    const toutAllowed = config.Tout.enabled && [...solo,"Bagga","Bettel"].includes(state.game);
+    const lightAllowed = config.Light.enabled && solo.includes(state.game);
+    if (toutAllowed || lightAllowed) {
+      const group = el("div", "choices");
+      for (const mode of ["Nein", ...(toutAllowed ? ["Tout"] : []), ...(lightAllowed ? ["Light"] : [])]) {
+        const selected = mode === "Tout" ? state.tout : mode === "Light" ? state.light : !state.tout && !state.light;
+        group.append(option(mode,selected,()=>{state.tout=mode==="Tout";state.light=mode==="Light"}));
+      }
+      root.append(section("Tout & Light",group));
     }
     root.append(
       section(
@@ -403,16 +382,19 @@
       ),
     );
     if (state.game === "Ramsch" && config.Jungfrau.enabled) {
-      const group = el("div", "choices");
+      const group = el("div", "players jungfrau-players");
       for (let i = 0; i < 4; i++) {
         const b = option(
-          "Spieler " + (i + 1),
+          "",
           state.jungfrauen.includes(i),
           () =>
             (state.jungfrauen = state.jungfrauen.includes(i)
               ? state.jungfrauen.filter((x) => x !== i)
               : [...state.jungfrauen, i]),
         );
+        b.classList.add("jungfrau-choice");
+        b.setAttribute("aria-label", "Spieler " + (i + 1));
+        b.append(el("span", "avatar", "S" + (i + 1)), el("span", "", "Spieler " + (i + 1)));
         b.disabled = state.won || i === state.seat;
         group.append(b);
       }
@@ -443,8 +425,15 @@
         ),
       ),
     );
+    if (state.game === "Ramsch") {
+      const group = el("div", "choices count-options");
+      for (let n=1;n<=4;n++) group.append(option(String(n), state.knockers===n, ()=>state.knockers=state.knockers===n?0:n));
+      const field = section("Klopfer", group);
+      field.append(el("small", "muted", state.knockers ? state.knockers + " Klopfer: ×" + 2 ** state.knockers : "Keine Auswahl: ohne Klopfer"));
+      root.append(field);
+    }
     if (config.Legen.enabled) {
-      const group = el("div", "choices");
+      const group = el("div", "choices count-options");
       for (let n = 1; n <= 4; n++)
         group.append(
           option(
@@ -476,7 +465,7 @@
         " Spitzen + " +
         euro(value.bonus) +
         " Zuschläge; anschließend ×" +
-        value.multiplier;
+        value.multiplier.toLocaleString("de-DE");
       const hints = [];
       if (value.fractionalCent)
         hints.push("Centbruchteile werden exakt angezeigt und nicht gerundet.");
@@ -562,6 +551,7 @@
     ]) {
       const cfg = config[name],
         tr = el("tr");
+      tr.dataset.option = name;
       tr.classList.toggle("disabled-row", !cfg.enabled);
       const enabled = el("input");
       enabled.type = "checkbox";
@@ -598,7 +588,7 @@
         input.setAttribute("aria-label", name + " Betrag in Euro");
         price.append(input);
       } else
-        price.textContent = ["Tout", "Light", "Jungfrau"].includes(name)
+        price.textContent = name === "Tout" ? "×2 / Bettel ×1,5" : ["Light", "Jungfrau"].includes(name)
           ? "×2"
           : name === "Legen"
             ? "×2 je Leger"
@@ -628,6 +618,7 @@
         .forEach((n) => (draft[n.dataset.price].cents = parseCents(n.value)));
       if (!games.some((g) => draft[g].enabled))
         throw Error("Mindestens ein Spiel freigeben.");
+      if (draft.Ramsch.enabled && draft.Kreuzspiel.enabled) throw Error("Ramsch oder Kreuzspiel wählen, nicht beides.");
       config = draft;
       if (!config[state.game].enabled)
         state.game = games.find((g) => config[g].enabled);
@@ -635,6 +626,7 @@
       state.tout = false;
       state.light = false;
       state.laid = 0;
+      state.knockers = 0;
       state.jungfrauen = [];
       $("settingsDialog").close();
       render();
