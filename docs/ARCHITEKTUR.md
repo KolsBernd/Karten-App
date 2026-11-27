@@ -63,3 +63,11 @@ Die Änderungen erweitern keine Datenübertragung, Sichtbarkeit oder Speicherung
 ## Euro-Dummy Version 52
 
 `resultAllowed` ist die gemeinsame Quelle für Ergebniszuschläge in Berechnung und Eingabe. Ausgeblendete Werte wirken dadurch nicht im Hintergrund weiter. Freigegebene Spiellogos sind eigenständige SVGs mit eingebetteten PNG-Motiven, ohne Netzabhängigkeit. Feste, responsive Bildboxen verhindern springende Buttonhöhen. Die Bildkomposition enthält keine Benutzerinformationen.
+
+## Anmeldung und Euro-Freigabe (Version 53)
+
+App- und Bibliotheksversionen sind unabhängig. Die lokale Supabase-Datei `supabase-2.50.0.min.js` darf bei Versionsänderungen nicht umbenannt werden. `tests/static-assets-regression.cjs` prüft alle lokalen Script-/Stylesheet-Verweise vor den Mocktests. Der Browserstart-Test lädt zusätzlich den echten Scriptverbund mit leerem Sitzungsspeicher; alle externen Anfragen bleiben gesperrt.
+
+`euroAllowed` ist von `resetAllowed` getrennt. Betreiberstatus stammt aus `hh_admin_reset`. Für Yannik wird zusätzlich der kanonische Kontoname aus dem eigenen serverseitigen Profildatensatz sowie seine bestehende Server-Freigabe aus `hh_tournament_capabilities` geprüft. Andere Turnierersteller erhalten keinen Zugriff. Jeder Aufruf prüft erneut; Identitätswechsel verwerfen späte Antworten. Es gibt keine neue Datenbankberechtigung und keine Weitergabe von Kontodaten an den anonymen Dummy.
+
+Die Bildschirmtests laufen ausschließlich auf HTTPS-Loopback mit temporärem Testzertifikat. So bleibt `upgrade-insecure-requests` auch beim unveränderten App-Start wirksam. `ignoreHTTPSErrors` gilt allein für diesen abgeschotteten Testkontext, nicht für die App oder Supabase-Verbindungen.

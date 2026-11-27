@@ -33,13 +33,13 @@ test('Klopfer und grüne Jungfrau-Porträts',async({page},info)=>{
 });
 
 // Published documentation uses the same local assets as the app shell.
-test('Handbuch 52, Dokumente und Rückweg',async({page,request})=>{
+test('Handbuch 53, Dokumente und Rückweg',async({page,request})=>{
  await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
- await page.goto('/nutzerhandbuch.html');await expect(page.locator('meta[name=handbook-version]')).toHaveAttribute('content','52');await expect(page.locator('header a[href="index.html"]')).toBeVisible();await expect(page.locator('header a[download]')).toHaveCount(1);
+ await page.goto('/nutzerhandbuch.html');await expect(page.locator('meta[name=handbook-version]')).toHaveAttribute('content','53');await expect(page.locator('header a[href="index.html"]')).toBeVisible();await expect(page.locator('header a[download]')).toHaveCount(1);
  for(const img of ['schafkopf-euro-52.jpg','schafkopf-euro-einstellungen-52.jpg','schafkopf-euro-ramsch-52.jpg']){const response=await request.get('/handbuch/'+img);expect(response.ok()).toBe(true)}
  await page.goto('/nutzerhandbuch.html#embedded');await expect(page.locator('header')).toBeHidden();
  for(const file of ['nutzerhandbuch.pdf','datenschutz.pdf']){const response=await request.get('/'+file);expect(response.ok()).toBe(true);expect(response.headers()['content-type']).toBe('application/pdf');expect((await response.body()).subarray(0,4).toString()).toBe('%PDF')}
- await page.goto('/datenschutz.html');await expect(page.locator('body')).toContainText('Version 52.0');expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(()=>innerWidth+2));
+ await page.goto('/datenschutz.html');await expect(page.locator('body')).toContainText('Version 53.0');expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(await page.evaluate(()=>innerWidth+2));
 });
 
 // Keep compact labels, no accidental defaults and actual SVG/embedded-image loading.
@@ -54,4 +54,12 @@ test('Freigegebene Spielsymbole und kompakte Kategorien',async({page},info)=>{
  
  await page.locator('#settingsOpen').click();
  expect(errors).toEqual([]);
+});
+
+// No SDK substitute: exercise the real published script chain while blocking all remote traffic.
+test('Anmeldestart mit tatsächlichen lokalen Bibliotheken',async({page},info)=>{
+ const errors=[],missing=[],remote=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().endsWith('.js')&&r.status()>=400)missing.push(r.url())});
+ await page.route('**/*',r=>{if(new URL(r.request().url()).hostname==='127.0.0.1')return r.continue();remote.push(r.request().url());return r.abort()});await page.goto('/index.html');
+ await expect(page.locator('#hhStatus')).toContainText('Bitte anmelden oder ein Konto erstellen.');await expect(page.locator('#hhSendLogin')).toBeEnabled();expect(await page.evaluate(()=>typeof window.supabase?.createClient)).toBe('function');expect(missing).toEqual([]);expect(errors).toEqual([]);expect(remote).toEqual([]);
+ 
 });
