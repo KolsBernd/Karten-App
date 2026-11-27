@@ -12,6 +12,8 @@ Keine neuen Datenarten, Empfänger, Sichtbarkeiten, Speicherfristen oder Drittan
 
 ## Prüfung
 
+Erster Prüflauf: alle Funktionstests und 88 Bildschirm-/Dokumenttests bestanden (GitHub Actions 45992284491).
+
 Die vorhandenen Funktionstests bleiben bestehen. Zusätzliche Prüfungen sichern fehlende Ergebniszuschläge, kurze Auswahlbeschriftungen, SVG-Kartenanzahl und tatsächliches Laden, keine Leger-Vorauswahl sowie Dokumentaufruf und Downloads ab. Bildschirmtests verwenden anonyme Daten in Chromium/WebKit für Handy und Tablet. Handbuch und Datenschutz liegen als HTML/PDF vor; geänderte Seiten werden gerendert und visuell kontrolliert.
 
 Dies ist eine Entwicklungsprüfung, kein unabhängiges Sicherheitsgutachten und keine Abnahme auf echten Endgeräten.

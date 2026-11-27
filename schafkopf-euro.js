@@ -96,7 +96,8 @@
   const spikesAllowed = (game, light = false) =>
     !light &&
     !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch", "Bettel"].includes(game);
-  const resultAllowed = (game) => !["Ramsch", "Spitz", "Bagga", "Bettel"].includes(game);
+  const resultAllowed = (game) =>
+    !["Ramsch", "Spitz", "Bagga", "Bettel"].includes(game);
   function calculate(config, input) {
     if (!games.includes(input.game) || !config[input.game]?.enabled)
       throw Error("Dieses Spiel ist nicht freigegeben.");
