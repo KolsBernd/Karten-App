@@ -1,4 +1,4 @@
-# Kartabend 53
+# Kartabend 54
 
 Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
@@ -37,3 +37,5 @@ Version 51 ergänzt gemeinsame Tout-/Light-Auswahl, Bettel-Tout ×1,5, Ramsch-Kl
 Version 52 verwendet die freigegebenen Kartenmotive aus dem bereitgestellten Kartendeck. Spitz, Bagga und Bettel rechnen ohne Ergebniszuschläge. Tout und Ansage erhalten kürzere Beschriftungen; Leger beginnt ohne Auswahl.
 
 Version 53 korrigiert den Verweis auf die lokal ausgelieferte Supabase-Bibliothek. Abhängigkeitsprüfung und echter anonymer Browserstart ergänzen die bisherigen Tests. Yannik erhält die isolierte Euro-Testansicht ohne Verwaltungsrechte.
+
+Version 54: Die Euro-Testeinstellungen zeigen ausschließlich Beträge und passende Spielsymbole. Jungfrau trägt den Hinweis „Nur bei Ramsch“. Die bestehende Menüfreigabe bleibt ausschließlich bei Kolsbernd und Yannik. Keine neue serverseitige Geldspeicherung. Veröffentlichung auf ausdrücklichen Wunsch ohne weitere Tests.
