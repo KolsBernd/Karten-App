@@ -1,0 +1,25 @@
+/* The Euro game is inline, not an iframe/dialog. The ordinary room header and
+   bottom navigation remain available, while stale ordinary scores are hidden. */
+body.hh-euro-game #play,body.hh-euro-game #hhExtraGame,
+body.hh-euro-game .dock-score,body.hh-euro-game #hhSoloScore,
+body.hh-euro-game #hhTeamMeta,body.hh-euro-game #hhPartyFlow,
+body.hh-euro-game .hh-dock-faces,body.hh-euro-game .hh-dock-losses,
+body.hh-euro-game .hh-dock-members{display:none!important}
+#hhEuroRoom.hide{display:none!important}
+#hhEuroDummy{white-space:nowrap}
+#hhEuroRoomRanks .table-scroll,#hhEuroRoomHistory .table-scroll{max-width:100%;overflow-x:auto}
+#hhEuroRoomRanks table,#hhEuroRoomHistory table{width:100%;border-collapse:collapse;font-size:14px}
+#hhEuroRoomRanks th,#hhEuroRoomRanks td,#hhEuroRoomHistory th,#hhEuroRoomHistory td{padding:10px 8px;border-bottom:1px solid var(--line,#e6e3ea);text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}
+#hhEuroRoomRanks .history-logo,#hhEuroRoomHistory .history-logo{display:inline-flex;align-items:center;gap:7px}
+#hhEuroRoomRanks .avatar,#hhEuroRoomHistory .avatar{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;overflow:hidden;background:var(--panel,#f0eff3);font-size:13px;flex:none}
+#hhEuroRoomRanks .avatar img,#hhEuroRoomHistory .avatar img{width:100%;height:100%;object-fit:cover}
+#hhEuroRoomHistory details{border-top:1px solid var(--line,#e6e3ea);padding:12px 0}
+#hhEuroRoomHistory summary{cursor:pointer;font-weight:650}
+#hhEuroRoomHistory .hand-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--line,#e6e3ea);font-size:14px}
+#hhEuroRoomHistory .hand-row small{grid-column:1/-1;color:var(--muted,#716d77)}
+#hhEuroRoomHistory .game-name{display:flex;gap:7px;align-items:center;min-width:0}
+#hhEuroRoomHistory .game-name img{width:34px;height:34px;object-fit:contain}
+#hhEuroRoomHistory .transfer{padding:10px;border-radius:12px;background:var(--panel,#f0eff3)}
+
+body.hh-euro-selected #hhTeamSetupPanel{display:none!important}
+body.hh-euro-selected #hhViewRoomQR{display:none!important}

@@ -1,4 +1,4 @@
-# Kartabend 54
+# Kartabend 55
 
 Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
@@ -39,3 +39,5 @@ Version 52 verwendet die freigegebenen Kartenmotive aus dem bereitgestellten Kar
 Version 53 korrigiert den Verweis auf die lokal ausgelieferte Supabase-Bibliothek. Abhängigkeitsprüfung und echter anonymer Browserstart ergänzen die bisherigen Tests. Yannik erhält die isolierte Euro-Testansicht ohne Verwaltungsrechte.
 
 Version 54: Die Euro-Testeinstellungen zeigen ausschließlich Beträge und passende Spielsymbole. Jungfrau trägt den Hinweis „Nur bei Ramsch“. Die bestehende Menüfreigabe bleibt ausschließlich bei Kolsbernd und Yannik. Keine neue serverseitige Geldspeicherung. Veröffentlichung auf ausdrücklichen Wunsch ohne weitere Tests.
+
+Version 55 integriert Schafkopf (€) als serverseitig gespeichertes Raumspiel mit dauerhafter Ergebnisanzeige. Auswahl und Erfassung bleiben Kolsbernd und Yannik vorbehalten. Bestätigte Raummitglieder können mitlesen. Keine Übernahme in Profil-/Globalstatistiken oder Zuschauerfreigaben. Vor Veröffentlichung ist 49-euro-raumspiel.sql in Supabase einzurichten. Keine weiteren Tests auf ausdrücklichen Wunsch.

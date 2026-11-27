@@ -71,3 +71,11 @@ App- und Bibliotheksversionen sind unabhängig. Die lokale Supabase-Datei `supab
 `euroAllowed` ist von `resetAllowed` getrennt. Betreiberstatus stammt aus `hh_admin_reset`. Für Yannik wird zusätzlich der kanonische Kontoname aus dem eigenen serverseitigen Profildatensatz sowie seine bestehende Server-Freigabe aus `hh_tournament_capabilities` geprüft. Andere Turnierersteller erhalten keinen Zugriff. Jeder Aufruf prüft erneut; Identitätswechsel verwerfen späte Antworten. Es gibt keine neue Datenbankberechtigung und keine Weitergabe von Kontodaten an den anonymen Dummy.
 
 Die Bildschirmtests laufen ausschließlich auf HTTPS-Loopback mit temporärem Testzertifikat. So bleibt `upgrade-insecure-requests` auch beim unveränderten App-Start wirksam. `ignoreHTTPSErrors` gilt allein für diesen abgeschotteten Testkontext, nicht für die App oder Supabase-Verbindungen.
+
+## Schafkopf (€) als Raumspiel (Version 55)
+
+`euro-room.js` hält Darstellung, Live-Abgleich und Raumhistorie getrennt vom normalen Raumzustand. `49-euro-raumspiel.sql` speichert ausschließlich in `hh_euro_rooms`; Geldwerte gelangen nicht in `hh_states` oder persönliche Ergebnisse. RLS sperrt direkten Zugriff; `hh_euro_room` prüft Raummitgliedschaft, Schreibrechte, Revision und eindeutige Anfragekennung. Schreibrechte werden einmalig anhand vorhandener Konten ermittelt und danach anhand der Kontokennung geprüft. Ein Freitext-Anzeigename allein verleiht keine Rechte. Alle Beträge werden serverseitig in ganzzahligen Viertelcent berechnet.
+
+Konkurrierende Änderungen erzwingen erneute Bestätigung. Nach unsicherem Verbindungsabbruch erfolgt keine automatische Doppelbuchung. Einstellungen sind an die geöffnete Revision gebunden; unveränderte Abfragen erhalten Eingabefokus und Auswahl. Die getrennte Speicherung schließt finanzielle Daten aus Profil-/Globalstatistiken und bestehenden Zuschauer-RPCs aus. Raum- und globale Resets leeren die Euro-Verläufe; Raumlöschung wirkt über Fremdschlüssel.
+
+Die frühere Standalone-Testseite enthält nur noch einen Verweis auf die App. Die gemeinsame Berechnungsbibliothek bleibt für vorhandene Regressionen kompatibel. Diese Veröffentlichung erfolgt auf Wunsch ohne weitere Testläufe; ältere isolierte Prüfergebnisse sind keine neue Live-Abnahme und kein unabhängiges Sicherheitsgutachten.

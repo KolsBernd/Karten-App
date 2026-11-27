@@ -9,9 +9,9 @@ execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',ke
 process.on('exit',()=>fs.rmSync(certDir,{recursive:true,force:true}));
 https.createServer({key:fs.readFileSync(key),cert:fs.readFileSync(cert)},(req,res)=>{
  const pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
- const base=pathname.startsWith('/fixtures/')?fixtures:root;
- const relative=pathname.startsWith('/fixtures/')?pathname.slice(10):pathname.slice(1);
- const file=path.resolve(base,relative);const appEntry=pathname==='/index.html';const experiment=pathname==='/schafkopf-euro.html'||pathname==='/schafkopf-euro.js';
+ const financial=pathname==='/fixtures/euro-room.html',calculator=pathname==='/fixtures/euro-calculator.html';const base=pathname.startsWith('/fixtures/')&&!financial&&!calculator?fixtures:root;
+ const relative=calculator?'tests/visual/euro-calculator.html':financial?'tests/visual/euro-room-shell.html':pathname.startsWith('/fixtures/')?pathname.slice(10):pathname.slice(1);
+ const file=path.resolve(base,relative);const appEntry=pathname==='/index.html';const experiment=calculator||financial||pathname==='/schafkopf-euro.html'||pathname==='/schafkopf-euro.js';
  if(req.method!=='GET'||!file.startsWith(base+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()||(!['.js','.html','.pdf','.css','.svg','.png','.jpg','.jpeg','.webp'].includes(path.extname(file))&&pathname!=='/schafkopf-euro.js')){res.writeHead(404);res.end();return}
  res.setHeader('Content-Type',({'.pdf':'application/pdf','.js':'application/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'})[path.extname(file)]);
  res.setHeader('Content-Security-Policy',"default-src 'self' data:; script-src "+(appEntry?"'self' 'unsafe-inline'":experiment?"'self'":"'none'")+"; connect-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src "+(pathname==='/fixtures/euro-frame.html'?"'self'":"'none'")+"");
