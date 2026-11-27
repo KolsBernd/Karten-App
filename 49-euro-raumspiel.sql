@@ -169,6 +169,8 @@ declare uid uuid:=auth.uid();writer boolean;state_row public.hh_euro_rooms;paylo
   if octet_length(state_row.data::text)>3000000 then raise exception 'Raum-Abrechnungen zu groß. Bitte sichern und Raumstatistiken zurücksetzen';end if;
   select coalesce(display_username,username,'Nutzer') into name from public.hh_profiles where user_id=uid;
   state_row.data:=jsonb_set(state_row.data,'{events}',coalesce(state_row.data->'events','[]')||jsonb_build_array(jsonb_build_object('action',p_action,'actor',uid,'actor_name',name,'at',clock_timestamp(),'request',p_request,'series_id',cur->>'id','removed',case when p_action='undo' then rec else null end)));
+  if p_action='add' and octet_length((state_row.data||jsonb_build_object('history',hist||jsonb_build_array(cur)))::text)>2900000 then raise exception 'Bitte diese Abrechnung abschließen und danach einen neuen Kartabend verwenden';end if;
+  if octet_length(state_row.data::text)>3000000 then raise exception 'Abrechnungsspeicher voll';end if;
   state_row.revision:=state_row.revision+1;state_row.requests:=state_row.requests||jsonb_build_object(nonce,jsonb_build_object('hash',request_hash,'revision',state_row.revision));
   select coalesce(jsonb_object_agg(key,value),'{}') into state_row.requests from(select key,value from jsonb_each(state_row.requests) order by(value->>'revision')::bigint desc limit 60) x;
   insert into public.hh_euro_rooms(room_id,revision,data,requests) values(state_row.room_id,state_row.revision,state_row.data,state_row.requests) on conflict(room_id) do update set revision=excluded.revision,data=excluded.data,requests=excluded.requests,updated_at=clock_timestamp();

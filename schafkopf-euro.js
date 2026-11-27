@@ -242,7 +242,7 @@
     Bettel: "cards/euro-bettel.svg",
     Bagga: "cards/euro-bagga.svg",
     Spitz: "cards/euro-spitz.svg",
-    Ramsch: "eichel",
+    Ramsch: "cards/euro-ramsch.svg",
   };
   let config = defaults(),
     history = [],
@@ -654,10 +654,11 @@
       };
       const td = el("td");
       td.append(enabled);
-      tr.append(td, el("th", "", name));
-      const point = el("td");
-      point.textContent = cfg.points ?? "";
-      tr.append(point);
+      const gameName=el("th"),label=el("span","settings-game");
+      if(icons[name]){const image=el("img");image.src=icons[name].includes("/")?icons[name]:"cards/"+icons[name]+".svg";image.alt="";label.append(image);}
+      label.append(document.createTextNode(name));gameName.append(label);
+      if(name==="Jungfrau")gameName.append(el("small","muted","Nur bei Ramsch"));
+      tr.append(td,gameName);
       const price = el("td");
       if (cfg.cents !== null) {
         const input = el("input");
