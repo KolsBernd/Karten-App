@@ -1,0 +1,32 @@
+name: Euro-Raumregeln
+on:
+  push:
+    branches: [main, 'audit/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  euro-rules:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: kartabend-test-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vergleichsfälle ohne Nutzerdaten erzeugen
+        run: node tests/euro-room-vectors.cjs
+      - name: Regeln und Zugriffe in isolierter Testdatenbank
+        run: psql postgresql://postgres:kartabend-test-only@127.0.0.1:5432/postgres -v ON_ERROR_STOP=1 -f tests/euro-room-server.ci.sql
