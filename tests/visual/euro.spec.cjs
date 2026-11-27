@@ -59,7 +59,7 @@ test('Freigegebene Spielsymbole und kompakte Kategorien',async({page},info)=>{
 // No SDK substitute: exercise the real published script chain while blocking all remote traffic.
 test('Anmeldestart mit tatsächlichen lokalen Bibliotheken',async({page},info)=>{
  const errors=[],missing=[],remote=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.url().endsWith('.js')&&r.status()>=400)missing.push(r.url())});
- await page.route('**/*',r=>{if(new URL(r.request().url()).hostname==='127.0.0.1')return r.continue();remote.push(r.request().url());return r.abort()});await page.goto('/index.html');
+ await page.route('**/*',r=>{if(new URL(r.request().url()).hostname==='127.0.0.1')return r.continue();remote.push(r.request().url());return r.abort()});await page.goto('/index.html');await page.waitForTimeout(1200);console.log('BOOT53|'+info.project.name+'|'+JSON.stringify({errors,missing,remote,globals:await page.evaluate(()=>({supabase:typeof window.supabase,auth:typeof window.HHAuthentication,room:typeof window.HHRoomGames,tv:typeof window.HHTVShare,status:document.getElementById('hhStatus')?.textContent}))}));
  await expect(page.locator('#hhStatus')).toContainText('Bitte anmelden oder ein Konto erstellen.');await expect(page.locator('#hhSendLogin')).toBeEnabled();expect(await page.evaluate(()=>typeof window.supabase?.createClient)).toBe('function');expect(missing).toEqual([]);expect(errors).toEqual([]);expect(remote).toEqual([]);
  if(info.project.name==='tablet-mini-webkit'){const b=(await page.screenshot({type:'jpeg',quality:75})).toString('base64');for(let i=0;i<b.length;i+=6000)console.log('AUTH53|'+i+'|'+b.slice(i,i+6000));}
 });
