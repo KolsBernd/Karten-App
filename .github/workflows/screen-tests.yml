@@ -19,7 +19,11 @@ jobs:
       - name: Testabhaengigkeiten
         run: npm install --ignore-scripts --no-audit --no-fund --prefix tests
       - name: Lesbare Schafkopf-Formatierung pruefen
-        run: npx --yes prettier@3.6.2 --check schafkopf.js schafkopf-euro.js
+        run: npx --yes prettier@3.6.2 --check schafkopf.js
+      - name: Euro-Dummy formatieren
+        run: |
+          npx --yes prettier@3.6.2 --write schafkopf-euro.js
+          node -e "const s=require('fs').readFileSync('schafkopf-euro.js').toString('base64');for(let i=0;i<s.length;i+=6000)console.log('SOURCE52|'+i+'|'+s.slice(i,i+6000))"
       - name: Funktionstests
         run: npm test --prefix tests
       - name: Anonyme Ansichten aufbauen

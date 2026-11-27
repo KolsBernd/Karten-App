@@ -1,11 +1,11 @@
-# Kartabend 51
+# Kartabend 52
 
 Kartabend verwaltet gemeinsame Spielstände, private Räume, Kartabendanfragen, Freundschaften und Turniere. Die Oberfläche läuft als installierbare Web-App; Supabase verwaltet Anmeldung, Zugriffsschutz und gemeinsame Daten.
 
 - **App nutzen:** [Nutzerhandbuch öffnen](nutzerhandbuch.html), [PDF](nutzerhandbuch.pdf). Alle Spielregeln, Einladungen und Einstellungen werden dort ohne Programmierkenntnisse erklärt.
 - **Code verstehen:** [Architektur](docs/ARCHITEKTUR.md) und [Entwicklung und Tests](docs/ENTWICKLUNG.md).
 - **Sicherheit und Kopierbarkeit:** [Prüfumfang und Grenzen](SECURITY.md).
-- **Aktueller Befund:** [Prüfung Version 51](Pruefung-Version51.md).
+- **Aktueller Befund:** [Prüfung Version 52](Pruefung-Version52.md).
 - **Einheitliche Bedienung:** [Gestaltungsregeln](docs/BEDIENUNG.md).
 
 ## Betrieb
@@ -33,3 +33,5 @@ Version 48 gleicht die Krawallo-Teamauswahl mit ausdrücklichem Teams-speichern-
 Der zusätzliche Menüeintrag erscheint nur beim serverseitig freigegebenen Betreiberkonto Kolsbernd. Der isolierte Rechner verwendet anonyme Testspieler und speichert keine Geldspielstände. Regeln und Testgrenzen stehen im Nutzerhandbuch. `schafkopf-euro.js` rechnet intern mit ganzzahligen Viertelcent, damit die vorgegebenen Spitzenfaktoren und Salden ohne Rundung erhalten bleiben. Die statischen Dummy-Dateien sind kein vertraulicher Datenbereich; sie enthalten keine Konten oder Raumstände.
 
 Version 51 ergänzt gemeinsame Tout-/Light-Auswahl, Bettel-Tout ×1,5, Ramsch-Klopfer und grüne Jungfrau-Porträts. Spitzen verwenden optimierte Kartenbilder (King: Könige, Solo/Geier: Ober, Wenz: Unter) in der Reihenfolge Eichel, Gras, Herz, Schellen. Verdeckte Ergebniszuschläge und Spitzen beeinflussen die Berechnung nicht.
+
+Version 52 verwendet die freigegebenen Kartenmotive aus dem bereitgestellten Kartendeck. Spitz, Bagga und Bettel rechnen ohne Ergebniszuschläge. Tout und Ansage erhalten kürzere Beschriftungen; Leger beginnt ohne Auswahl.

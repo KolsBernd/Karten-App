@@ -96,6 +96,7 @@
   const spikesAllowed = (game, light = false) =>
     !light &&
     !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch", "Bettel"].includes(game);
+  const resultAllowed = (game) => !["Ramsch", "Spitz", "Bagga", "Bettel"].includes(game);
   function calculate(config, input) {
     if (!games.includes(input.game) || !config[input.game]?.enabled)
       throw Error("Dieses Spiel ist nicht freigegeben.");
@@ -108,8 +109,8 @@
     const factors = { "": 4, A: 4, AB: 6, ABC: 7, ABCD: 8, CD: 7, D: 8 };
     if (!/^[ABCD]*$/.test(key)) throw Error("Ungültige Spitzenwahl.");
     const spikeFactor = factors[key] ?? 4;
-    // Hidden result fields never contribute to Tout, Light or Ramsch.
-    const usesResult = input.game !== "Ramsch" && !input.tout && !input.light;
+    // Hidden result fields never contribute to Tout/Light or games without result bonuses.
+    const usesResult = resultAllowed(input.game) && !input.tout && !input.light;
     if (usesResult) {
       if (!["normal", "schneider", "durch"].includes(input.result))
         throw Error("Spielergebnis wählen.");
@@ -206,6 +207,7 @@
     settlement,
     parseCents,
     spikesAllowed,
+    resultAllowed,
     games,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -230,15 +232,15 @@
       maximumFractionDigits: 4,
     }).format(cents / 100);
   const icons = {
-    King: "king",
-    Wenz: "wenz",
-    Geier: "ober",
-    Solo: "eichel",
-    Sau: "sau",
+    King: "cards/euro-king.svg",
+    Wenz: "cards/euro-wenz.svg",
+    Geier: "cards/euro-geier.svg",
+    Solo: "cards/euro-solo.svg",
+    Sau: "cards/euro-sau.svg",
     Kreuzspiel: "kreuzspiel",
-    Bettel: "wenz",
-    Bagga: "wenz",
-    Spitz: "sau",
+    Bettel: "cards/euro-bettel.svg",
+    Bagga: "cards/euro-bagga.svg",
+    Spitz: "cards/euro-spitz.svg",
     Ramsch: "eichel",
   };
   let config = defaults(),
@@ -401,7 +403,7 @@
     results.children[1].disabled = !config.Schneider.enabled;
     results.children[2].disabled =
       !config.Schneider.enabled || !config.Durch.enabled;
-    if (state.game !== "Ramsch" && !state.tout && !state.light)
+    if (resultAllowed(state.game) && !state.tout && !state.light)
       root.append(section("Spielergebnis", results));
     const toutAllowed =
       config.Tout.enabled && [...solo, "Bagga", "Bettel"].includes(state.game);
@@ -426,7 +428,7 @@
           }),
         );
       }
-      root.append(section("Tout & Light", group));
+      root.append(section(lightAllowed ? "Tout & Light" : "Tout", group));
     }
     root.append(
       section(
@@ -479,9 +481,9 @@
         choices(
           [
             [1, "Ohne"],
-            [2, "Kontra ×2"],
-            [4, "Re ×4"],
-            [8, "Sub ×8"],
+            [2, "Kontra"],
+            [4, "Re"],
+            [8, "Sub"],
           ],
           "announcement",
         ),

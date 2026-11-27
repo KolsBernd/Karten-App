@@ -59,3 +59,7 @@ Der Operator-Menüeintrag fragt vor dem Öffnen nochmals den bestehenden servers
 Die zwölf PNG-Karten sind technisch verkleinerte Vorlagen, keine extern geladenen Bilder. Die Zuordnung A–D bleibt Eichel/Gras/Herz/Schellen. Bildbuttons erhalten zugängliche Kartennamen. Das Jungfrau-Porträt markiert die Auswahl ausdrücklich grün.
 
 Die Änderungen erweitern keine Datenübertragung, Sichtbarkeit oder Speicherung. Der isolierte Dummy erhält weiterhin nur anonyme Testspieler und verwirft seine Werte beim Schließen. Reale Euro-Spielstände sind nicht implementiert.
+
+## Euro-Dummy Version 52
+
+`resultAllowed` ist die gemeinsame Quelle für Ergebniszuschläge in Berechnung und Eingabe. Ausgeblendete Werte wirken dadurch nicht im Hintergrund weiter. Freigegebene Spiellogos sind eigenständige SVGs mit eingebetteten PNG-Motiven, ohne Netzabhängigkeit. Feste, responsive Bildboxen verhindern springende Buttonhöhen. Die Bildkomposition enthält keine Benutzerinformationen.
