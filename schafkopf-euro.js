@@ -94,7 +94,8 @@
     return n;
   }
   const spikesAllowed = (game, light = false) =>
-    !light && !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch", "Bettel"].includes(game);
+    !light &&
+    !["Sau", "Kreuzspiel", "Bagga", "Spitz", "Ramsch", "Bettel"].includes(game);
   function calculate(config, input) {
     if (!games.includes(input.game) || !config[input.game]?.enabled)
       throw Error("Dieses Spiel ist nicht freigegeben.");
@@ -110,9 +111,12 @@
     // Hidden result fields never contribute to Tout, Light or Ramsch.
     const usesResult = input.game !== "Ramsch" && !input.tout && !input.light;
     if (usesResult) {
-      if (!["normal", "schneider", "durch"].includes(input.result)) throw Error("Spielergebnis wählen.");
-      if (input.result !== "normal" && !config.Schneider.enabled) throw Error("Schneider ist nicht freigegeben.");
-      if (input.result === "durch" && !config.Durch.enabled) throw Error("Durch ist nicht freigegeben.");
+      if (!["normal", "schneider", "durch"].includes(input.result))
+        throw Error("Spielergebnis wählen.");
+      if (input.result !== "normal" && !config.Schneider.enabled)
+        throw Error("Schneider ist nicht freigegeben.");
+      if (input.result === "durch" && !config.Durch.enabled)
+        throw Error("Durch ist nicht freigegeben.");
     }
     if (input.tout && input.light)
       throw Error("Tout und Light sind im Dummy alternativ wählbar.");
@@ -134,12 +138,23 @@
     if (input.laid && !config.Legen.enabled)
       throw Error("Legen ist nicht freigegeben.");
     const knockers = input.game === "Ramsch" ? (input.knockers ?? 0) : 0;
-    if (!Number.isInteger(knockers) || knockers < 0 || knockers > 4) throw Error("Klopfer: 0 bis 4 wählen.");
-    const bonus = usesResult ? (input.result === "normal" ? 0 : config.Schneider.cents) + (input.result === "durch" ? config.Durch.cents : 0) : 0;
+    if (!Number.isInteger(knockers) || knockers < 0 || knockers > 4)
+      throw Error("Klopfer: 0 bis 4 wählen.");
+    const bonus = usesResult
+      ? (input.result === "normal" ? 0 : config.Schneider.cents) +
+        (input.result === "durch" ? config.Durch.cents : 0)
+      : 0;
     let quarters = c * spikeFactor + bonus * 4;
     // Bettel has no Spitzen/bonuses with Tout, so ×1.5 stays exact in quarter-cents.
-    const specialMultiplier = input.tout ? (input.game === "Bettel" ? 1.5 : 2) : input.light ? 2 : 1;
-    const multiplier = specialMultiplier * input.announcement * 2 ** input.laid * 2 ** knockers;
+    const specialMultiplier = input.tout
+      ? input.game === "Bettel"
+        ? 1.5
+        : 2
+      : input.light
+        ? 2
+        : 1;
+    const multiplier =
+      specialMultiplier * input.announcement * 2 ** input.laid * 2 ** knockers;
     quarters *= multiplier;
     if (!Number.isSafeInteger(quarters)) throw Error("Spielwert ist zu groß.");
     return {
@@ -336,13 +351,41 @@
     root.append(section("Spiel", variants));
     if (spikesAllowed(state.game, state.light)) {
       const group = el("div", "choices spikes");
-      const suits = {A:"Eichel", B:"Gras", C:"Herz", D:"Schellen"};
+      const suits = { A: "Eichel", B: "Gras", C: "Herz", D: "Schellen" };
       for (const letter of ["A", "B", "C", "D"]) {
-        const family = state.game === "King" ? "king" : ["Solo", "Geier"].includes(state.game) ? "ober" : state.game === "Wenz" ? "unter" : null, suit = suits[letter];
-        const b = option(family ? "" : letter, state.spikes.includes(letter), () => {
-          state.spikes = state.spikes.includes(letter) ? state.spikes.filter(x => x !== letter) : [...state.spikes,letter];
-        }, family ? "cards/" + family + "-" + suit.toLowerCase() + ".png" : undefined);
-        if (family) { const name = suit + (family === "king" ? "-König" : family === "ober" ? "-Ober" : "-Unter"); b.setAttribute("aria-label", name); b.title = name + " (" + letter + ")"; b.classList.add("spike-card"); }
+        const family =
+            state.game === "King"
+              ? "king"
+              : ["Solo", "Geier"].includes(state.game)
+                ? "ober"
+                : state.game === "Wenz"
+                  ? "unter"
+                  : null,
+          suit = suits[letter];
+        const b = option(
+          family ? "" : letter,
+          state.spikes.includes(letter),
+          () => {
+            state.spikes = state.spikes.includes(letter)
+              ? state.spikes.filter((x) => x !== letter)
+              : [...state.spikes, letter];
+          },
+          family
+            ? "cards/" + family + "-" + suit.toLowerCase() + ".png"
+            : undefined,
+        );
+        if (family) {
+          const name =
+            suit +
+            (family === "king"
+              ? "-König"
+              : family === "ober"
+                ? "-Ober"
+                : "-Unter");
+          b.setAttribute("aria-label", name);
+          b.title = name + " (" + letter + ")";
+          b.classList.add("spike-card");
+        }
         group.append(b);
       }
       root.append(section("Spitzen", group));
@@ -358,16 +401,32 @@
     results.children[1].disabled = !config.Schneider.enabled;
     results.children[2].disabled =
       !config.Schneider.enabled || !config.Durch.enabled;
-    if (state.game !== "Ramsch" && !state.tout && !state.light) root.append(section("Spielergebnis", results));
-    const toutAllowed = config.Tout.enabled && [...solo,"Bagga","Bettel"].includes(state.game);
+    if (state.game !== "Ramsch" && !state.tout && !state.light)
+      root.append(section("Spielergebnis", results));
+    const toutAllowed =
+      config.Tout.enabled && [...solo, "Bagga", "Bettel"].includes(state.game);
     const lightAllowed = config.Light.enabled && solo.includes(state.game);
     if (toutAllowed || lightAllowed) {
       const group = el("div", "choices");
-      for (const mode of ["Nein", ...(toutAllowed ? ["Tout"] : []), ...(lightAllowed ? ["Light"] : [])]) {
-        const selected = mode === "Tout" ? state.tout : mode === "Light" ? state.light : !state.tout && !state.light;
-        group.append(option(mode,selected,()=>{state.tout=mode==="Tout";state.light=mode==="Light"}));
+      for (const mode of [
+        "Nein",
+        ...(toutAllowed ? ["Tout"] : []),
+        ...(lightAllowed ? ["Light"] : []),
+      ]) {
+        const selected =
+          mode === "Tout"
+            ? state.tout
+            : mode === "Light"
+              ? state.light
+              : !state.tout && !state.light;
+        group.append(
+          option(mode, selected, () => {
+            state.tout = mode === "Tout";
+            state.light = mode === "Light";
+          }),
+        );
       }
-      root.append(section("Tout & Light",group));
+      root.append(section("Tout & Light", group));
     }
     root.append(
       section(
@@ -394,7 +453,10 @@
         );
         b.classList.add("jungfrau-choice");
         b.setAttribute("aria-label", "Spieler " + (i + 1));
-        b.append(el("span", "avatar", "S" + (i + 1)), el("span", "", "Spieler " + (i + 1)));
+        b.append(
+          el("span", "avatar", "S" + (i + 1)),
+          el("span", "", "Spieler " + (i + 1)),
+        );
         b.disabled = state.won || i === state.seat;
         group.append(b);
       }
@@ -427,9 +489,24 @@
     );
     if (state.game === "Ramsch") {
       const group = el("div", "choices count-options");
-      for (let n=1;n<=4;n++) group.append(option(String(n), state.knockers===n, ()=>state.knockers=state.knockers===n?0:n));
+      for (let n = 1; n <= 4; n++)
+        group.append(
+          option(
+            String(n),
+            state.knockers === n,
+            () => (state.knockers = state.knockers === n ? 0 : n),
+          ),
+        );
       const field = section("Klopfer", group);
-      field.append(el("small", "muted", state.knockers ? state.knockers + " Klopfer: ×" + 2 ** state.knockers : "Keine Auswahl: ohne Klopfer"));
+      field.append(
+        el(
+          "small",
+          "muted",
+          state.knockers
+            ? state.knockers + " Klopfer: ×" + 2 ** state.knockers
+            : "Keine Auswahl: ohne Klopfer",
+        ),
+      );
       root.append(field);
     }
     if (config.Legen.enabled) {
@@ -588,11 +665,14 @@
         input.setAttribute("aria-label", name + " Betrag in Euro");
         price.append(input);
       } else
-        price.textContent = name === "Tout" ? "×2 / Bettel ×1,5" : ["Light", "Jungfrau"].includes(name)
-          ? "×2"
-          : name === "Legen"
-            ? "×2 je Leger"
-            : "Noch offen";
+        price.textContent =
+          name === "Tout"
+            ? "×2 / Bettel ×1,5"
+            : ["Light", "Jungfrau"].includes(name)
+              ? "×2"
+              : name === "Legen"
+                ? "×2 je Leger"
+                : "Noch offen";
       tr.append(price);
       const description = el("td"),
         button = el("button", "info", "i");
@@ -618,7 +698,8 @@
         .forEach((n) => (draft[n.dataset.price].cents = parseCents(n.value)));
       if (!games.some((g) => draft[g].enabled))
         throw Error("Mindestens ein Spiel freigeben.");
-      if (draft.Ramsch.enabled && draft.Kreuzspiel.enabled) throw Error("Ramsch oder Kreuzspiel wählen, nicht beides.");
+      if (draft.Ramsch.enabled && draft.Kreuzspiel.enabled)
+        throw Error("Ramsch oder Kreuzspiel wählen, nicht beides.");
       config = draft;
       if (!config[state.game].enabled)
         state.game = games.find((g) => config[g].enabled);
